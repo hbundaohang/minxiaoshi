@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>河北民族师范学院 - 智能助手平台</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* ===== PC 端布局 ===== */
+    .pc-layout { display: flex; min-height: 100vh; }
+
+    /* 左侧边栏 */
+    .pc-sidebar {
+      width: 240px;
+      background: linear-gradient(180deg, #1e3a5f 0%, #2d4a6f 100%);
+      height: 100vh;
+      position: fixed; left: 0; top: 0;
+      display: flex; flex-direction: column;
+      z-index: 100; overflow-y: auto;
+    }
+    .pc-sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .pc-sidebar-logo .logo-icon { font-size: 36px; }
+    .pc-sidebar-logo .logo-text { color: #fff; }
+    .pc-sidebar-logo .logo-title { font-size: 16px; font-weight: 600; }
+    .pc-sidebar-logo .logo-subtitle { font-size: 12px; opacity: 0.7; }
+    .pc-sidebar-nav { padding: 16px 0; flex: 1; }
+    .pc-nav-item {
+      display: flex; align-items: center; padding: 14px 20px;
+      color: rgba(255,255,255,0.7); text-decoration: none; transition: all 0.3s; gap: 12px;
+      border-left: 3px solid transparent;
+    }
+    .pc-nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .pc-nav-item.active { background: rgba(255,255,255,0.15); color: #fff; border-left-color: #4a9eff; }
+    .pc-nav-icon { font-size: 20px; }
+    .pc-nav-text { font-size: 15px; }
+
+    /* 右侧主区域 */
+    .pc-main {
+      margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-width: 0; width: calc(100% - 240px);
+    }
+
+    /* 顶部导航栏 */
+    .pc-top-header {
+      background: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100;
+    }
+    .pc-header-title { font-size: 20px; font-weight: 600; color: #1a73e8; }
+    .pc-header-actions { display: flex; align-items: center; gap: 12px; }
+
+    /* 天气组件 */
+    .pc-weather-widget {
+      display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #e8f4fd 0%, #d4ecfb 100%);
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #1a73e8; white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(26,115,232,0.15);
+    }
+    .pc-weather-icon { font-size: 18px; }
+    .pc-weather-temp { font-weight: 600; font-size: 14px; }
+    .pc-weather-desc { font-size: 12px; color: #555; }
+
+    /* 顶部按钮 */
+    .pc-header-btn {
+      padding: 6px 14px; background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;
+      border-radius: 18px; font-size: 13px; font-weight: 500; text-decoration: none;
+      white-space: nowrap; box-shadow: 0 2px 6px rgba(26,115,232,0.3); transition: all 0.2s;
+    }
+    .pc-header-btn:hover { background: linear-gradient(135deg, #1557b0, #1a73e8); text-decoration: none; }
+
+    /* 搜索框 */
+    .pc-search-box { display: flex; align-items: center; background: #f5f5f5; border-radius: 20px; padding: 6px 12px; }
+    .pc-search-box input { border: none; background: transparent; outline: none; width: 200px; font-size: 14px; }
+    .pc-search-btn { background: transparent; border: none; cursor: pointer; font-size: 16px; }
+
+    /* 主内容区 */
+    .pc-main-content { max-width: 1200px; width: 100%; margin: 0 auto; padding: 24px; flex: 1; box-sizing: border-box; }
+
+    /* 首页横幅 */
+    .pc-hero-banner {
+      background: linear-gradient(135deg, #1a73e8 0%, #4285f4 50%, #669df6 100%);
+      border-radius: 16px; padding: 48px; color: #fff; text-align: center; margin-bottom: 32px;
+      position: relative; overflow: hidden;
+    }
+    .pc-hero-banner::before {
+      content: ''; position: absolute; top: -50%; right: -20%; width: 400px; height: 400px;
+      background: rgba(255,255,255,0.1); border-radius: 50%;
+    }
+    .pc-hero-banner h1 { font-size: 32px; margin-bottom: 8px; position: relative; }
+    .pc-hero-banner h2 { font-size: 24px; margin-bottom: 16px; font-weight: 400; opacity: 0.95; }
+    .pc-hero-banner p { font-size: 16px; opacity: 0.9; }
+    .pc-banner-icons { margin-top: 24px; display: flex; justify-content: center; gap: 24px; }
+    .pc-banner-icons span { font-size: 32px; opacity: 0.8; }
+
+    /* 首页功能卡片 */
+    .pc-feature-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+    .pc-feature-card {
+      background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: transform 0.3s, box-shadow 0.3s; text-align: center; cursor: pointer;
+    }
+    .pc-feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+    .pc-card-icon { font-size: 48px; margin-bottom: 16px; }
+    .pc-card-title { font-size: 20px; color: #1a73e8; margin-bottom: 8px; }
+    .pc-card-desc { color: #666; font-size: 14px; margin-bottom: 16px; }
+    .pc-card-features { list-style: none; text-align: left; margin-bottom: 20px; }
+    .pc-card-features li { padding: 8px 0; font-size: 14px; color: #555; border-bottom: 1px solid #f0f0f0; }
+    .pc-card-features li:last-child { border-bottom: none; }
+    .pc-card-features li::before { content: '✓ '; color: #34a853; margin-right: 8px; }
+    .pc-card-btn {
+      display: inline-block; background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;
+      border: none; padding: 12px 32px; border-radius: 24px; font-size: 15px; cursor: pointer;
+      transition: background 0.3s; text-decoration: none; text-align: center;
+    }
+    .pc-card-btn:hover { background: linear-gradient(135deg, #1557b0, #1a73e8); }
+
+    /* ===== 聊天页通用样式 ===== */
+    .pc-chat-page { display: none; }
+    .pc-chat-page.active { display: block; }
+    .pc-chat-page.hidden { display: none !important; }
+
+    /* 助手介绍区 */
+    .pc-assistant-header {
+      display: flex; align-items: center; gap: 20px; padding: 24px; background: #fff;
+      border-radius: 16px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .pc-assistant-icon {
+      width: 64px; height: 64px; background: linear-gradient(135deg, #1a73e8, #4285f4);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 32px; flex-shrink: 0;
+    }
+    .pc-assistant-info h1 { font-size: 22px; color: #1a73e8; margin-bottom: 6px; }
+    .pc-assistant-info p { color: #666; font-size: 14px; }
+
+    /* 聊天布局 */
+    .pc-chat-layout { display: flex; gap: 24px; height: calc(100vh - 320px); min-height: 500px; }
+
+    /* 快捷问题区 */
+    .pc-quick-questions {
+      width: 200px; background: #fff; border-radius: 16px; padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); flex-shrink: 0;
+    }
+    .pc-quick-questions h3 { font-size: 16px; color: #333; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e8f0fe; }
+    .pc-question-btn {
+      width: 100%; padding: 10px 12px; background: #f8f9fa; border: 1px solid #e0e0e0;
+      border-radius: 8px; font-size: 13px; color: #555; cursor: pointer; margin-bottom: 8px;
+      text-align: left; transition: all 0.2s;
+    }
+    .pc-question-btn:hover { background: #e8f0fe; border-color: #1a73e8; color: #1a73e8; }
+    .pc-question-btn:last-child { margin-bottom: 0; }
+
+    /* 二级菜单 */
+    .pc-quick-item { margin-bottom: 4px; }
+    .pc-q-main {
+      background: linear-gradient(135deg, #e8f0fe 0%, #d4e4ff 100%); border-color: #a8c8ff;
+      font-weight: 500; position: relative; padding-right: 30px;
+    }
+    .pc-q-main::after { content: '▼'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #1a73e8; transition: transform 0.2s; }
+    .pc-quick-item.expanded .pc-q-main::after { transform: translateY(-50%) rotate(180deg); }
+    .pc-q-sub { display: none; flex-direction: column; padding-left: 12px; margin-top: 4px; }
+    .pc-quick-item.expanded .pc-q-sub { display: flex; }
+    .pc-q-sub .pc-question-btn { font-size: 12px; padding: 8px 10px; color: #666; position: relative; padding-left: 20px; }
+    .pc-q-sub .pc-question-btn::before { content: '•'; position: absolute; left: 8px; color: #1a73e8; }
+
+    /* 聊天框 */
+    .pc-chat-box {
+      flex: 1; background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .pc-chat-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa; }
+    .pc-message { display: flex; margin-bottom: 20px; align-items: flex-start; }
+    .pc-ai-message { flex-direction: row; }
+    .pc-user-message { justify-content: flex-end; }
+    .pc-message-avatar {
+      width: 36px; height: 36px; background: #fff; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; margin-right: 12px; flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .pc-user-message .pc-message-avatar { display: none; }
+    .pc-message-bubble {
+      background: #fff; padding: 14px 18px; border-radius: 8px; max-width: 75%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06); line-height: 1.7; color: #333;
+      overflow: hidden;
+    }
+    .pc-message-bubble img { max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0; display: block; }
+    .pc-message-bubble a { color: #1a73e8; }
+    .pc-message-bubble pre { background: #f5f5f5; padding: 10px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    .pc-message-bubble code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .pc-user-message .pc-message-bubble { background: #1a73e8; color: #fff; }
+    .pc-user-message .pc-message-bubble img { filter: brightness(0.9); }
+    .pc-user-avatar {
+      width: 36px; height: 36px; background: #e8f0fe; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 18px; flex-shrink: 0; margin-left: 12px;
+    }
+    .pc-ai-message .pc-user-avatar { display: none; }
+    .pc-message-bubble p { margin: 0 0 10px 0; white-space: pre-wrap; word-break: break-word; }
+    .pc-message-bubble p:last-child { margin-bottom: 0; }
+    .pc-message-bubble p + p { margin-top: 10px; }
+
+    /* 打字指示器 */
+    .pc-typing-indicator .pc-message-bubble { display: flex; align-items: center; gap: 4px; padding: 14px 18px; }
+    .pc-typing-indicator span { width: 8px; height: 8px; background: #999; border-radius: 50%; animation: pcTyping 1.4s infinite; }
+    .pc-typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .pc-typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pcTyping { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-6px); opacity: 1; } }
+
+    /* 输入区 */
+    .pc-chat-input-area { padding: 16px; background: #fff; border-top: 1px solid #eee; }
+    .pc-input-wrapper { display: flex; align-items: center; gap: 10px; }
+    .pc-chat-input-area textarea {
+      flex: 1; border: 1px solid #ddd; border-radius: 24px; padding: 12px 18px;
+      resize: none; outline: none; font-family: inherit; font-size: 14px; max-height: 100px;
+    }
+    .pc-chat-input-area textarea:focus { border-color: #1a73e8; }
+    .pc-clear-btn {
+      padding: 10px 20px; border: 1px solid #e0e0e0; border-radius: 24px;
+      background: #f5f5f5; color: #666; font-size: 14px; cursor: pointer;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .pc-clear-btn:hover { background: #e8e8e8; border-color: #ccc; }
+    .pc-send-btn {
+      padding: 10px 24px; background: linear-gradient(135deg, #1a73e8, #4285f4); border: none;
+      border-radius: 24px; color: #fff; cursor: pointer; font-size: 14px; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .pc-send-btn:hover:not(:disabled) { background: linear-gradient(135deg, #1557b0, #1a73e8); }
+    .pc-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pc-input-hint { text-align: center; font-size: 12px; color: #999; margin-top: 8px; }
+
+    /* ===== 手机端 ===== */
+    .mobile-wrapper { display: none; }
+
+    @media (max-width: 768px) {
+      .pc-layout { display: none !important; }
+      .mobile-wrapper { display: block; }
+
+      .top-nav {
+        background: white; padding: 10px 16px; display: flex; align-items: center;
+        justify-content: space-between; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 100;
+      }
+      .top-nav-left span { color: #1890ff; font-size: 15px; font-weight: 600; }
+      .top-nav-right { display: flex; align-items: center; gap: 8px; }
+      .weather-badge {
+        background: #f0f7ff; color: #1890ff; padding: 4px 10px; border-radius: 14px; font-size: 12px;
+        display: flex; align-items: center; gap: 4px;
+      }
+      .nav-btn { padding: 4px 12px; border-radius: 14px; font-size: 12px; cursor: pointer; border: none; color: white; display: flex; align-items: center; gap: 4px; }
+      .nav-btn.blue { background: #1890ff; }
+      .nav-btn.green { background: #52c41a; }
+
+      .welcome-banner {
+        margin: 12px; background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%); border-radius: 16px;
+        padding: 32px 24px; text-align: center; color: white; position: relative; overflow: hidden;
+      }
+      .welcome-banner::before { content:''; position:absolute; right:-40px;top:-40px;width:160px;height:160px;background:rgba(255,255,255,0.1);border-radius:50%; }
+      .welcome-banner h1 { font-size: 22px; margin-bottom: 6px; }
+      .welcome-banner h2 { font-size: 15px; font-weight:400; margin-bottom:6px; opacity:0.9; }
+      .welcome-banner p { font-size:13px; opacity:0.8; line-height:1.5; }
+      .welcome-icons { margin-top: 18px; display:flex; justify-content:center; gap:20px; font-size:26px; }
+
+      .agent-card {
+        background:white;border-radius:16px;padding:28px 20px;text-align:center;margin:0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);
+      }
+      .agent-icon { font-size:52px; margin-bottom:14px; }
+      .agent-name { font-size:19px; font-weight:700; color:#1890ff; margin-bottom:4px; }
+      .agent-desc { font-size:13px; color:#999; margin-bottom:18px; }
+      .agent-features { text-align:left; margin-bottom:22px; padding:0 8px; }
+      .agent-features li { list-style:none; font-size:14px; color:#555; padding:7px 0; display:flex; align-items:center; gap:8px; border-bottom:1px solid #f5f5f5; }
+      .agent-features li:last-child { border:none; }
+      .agent-features li::before { content:'✓'; color:#52c41a; font-weight:bold; flex-shrink:0; font-size:15px; }
+      .agent-btn { background:#1890ff;color:white;border:none;padding:11px 44px;border-radius:22px;font-size:15px;cursor:pointer;width:100%;max-width:200px;font-weight:500; }
+
+      /* ===== 手机端聊天页（按截图） ===== */
+      .chat-page { display:none; height:100vh; flex-direction:column; max-width:600px; margin:0 auto; background:#f5f7fa; }
+      .chat-page.active { display:flex; }
+
+      /* 顶部栏 */
+      .chat-top-bar {
+        background:#fff; padding:10px 14px; display:flex; align-items:center;
+        border-bottom:1px solid #eee; position:sticky; top:0; z-index:100; gap:8px;
+        flex-wrap: wrap;
+      }
+      .chat-back-btn {
+        background:#f0f0f0; border:none; padding:8px 12px; border-radius:16px;
+        font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+        color:#333; flex-shrink:0;
+      }
+      .chat-back-btn:hover { background:#e0e0e0; }
+      }
+      .chat-top-title { font-size:15px; font-weight:700; color:#1890ff; white-space:nowrap; flex-shrink:0; }
+      .chat-top-right { display:flex; align-items:center; gap:6px; flex:1; justify-content:flex-end; }
+      /* 天气 */
+      .chat-weather {
+        display:flex; align-items:center; gap:4px; background:#e8f4fd; border-radius:16px;
+        padding:4px 10px; font-size:12px; color:#1890ff; white-space:nowrap;
+      }
+      .chat-weather-icon { font-size:15px; }
+      .chat-weather-temp { font-weight:600; }
+      .chat-weather-desc { color:#666; font-size:11px; }
+      /* 顶部按钮 */
+      .chat-top-btn {
+        padding:5px 12px; border-radius:16px; font-size:12px; cursor:pointer; border:none;
+        color:white; white-space:nowrap; display:flex; align-items:center; gap:3px;
+      }
+      .chat-top-btn.blue { background:#1890ff; }
+      .chat-top-btn.green { background:#13c2c2; }
+
+      /* 助手信息卡片 */
+      .m-assistant-card {
+        background:#fff; margin:10px 12px; border-radius:14px; padding:14px 18px;
+        text-align:center; box-shadow:0 1px 8px rgba(0,0,0,0.05);
+      }
+      .m-avatar-circle { display:none; }
+      .m-as-name { font-size:17px; font-weight:700; color:#1890ff; margin-bottom:4px; }
+      .m-as-name.yx-color { color:#ff4d4f; }
+      .m-as-name.bx-color { color:#52c41a; }
+      .m-as-desc { font-size:12.5px; color:#999; line-height:1.5; }
+
+      /* 常见问题区 */
+      .m-qa-section { margin:0 12px 10px; background:#fff; border-radius:14px; box-shadow:0 1px 8px rgba(0,0,0,0.05); overflow:hidden; }
+      .m-qa-header { padding:14px 16px 10px; font-size:15px; font-weight:700; color:#333; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+      .m-qa-header::after { content:'▼'; font-size:11px; transition:transform 0.2s; }
+      .m-qa-header.collapsed::after { transform:rotate(-90deg); }
+      .m-qa-header.collapsed + .m-qa-list { display:none; }
+      .m-qa-list { padding:0 12px 14px; }
+      .m-qa-btn {
+        width:100%; padding:9px 14px; margin-bottom:6px; background:#e6f7ff; border:1px solid #d1e9fa;
+        border-radius:8px; font-size:13.5px; color:#1890ff; text-align:left; cursor:pointer;
+        transition:all 0.2s; position:relative; display:flex; align-items:center; justify-content:space-between;
+      }
+      .m-qa-btn:active { background:#bae7ff; }
+      .m-qa-btn .m-qa-arrow { font-size:11px; opacity:0.7; transition:transform 0.2s; }
+      .m-qa-btn.expanded .m-qa-arrow { transform:rotate(180deg); }
+      .m-qa-sub { display:none; padding-left:12px; margin-bottom:6px; }
+      .m-qa-sub.show { display:block; }
+      .m-qa-sub-btn {
+        display:block; width:100%; padding:7px 12px; margin-bottom:4px; background:#f0f5ff;
+        border:1px solid #e0ecff; border-radius:6px; font-size:12.5px; color:#555; text-align:left;
+        cursor:pointer; transition:all 0.2s; position:relative; padding-left:22px;
+      }
+      .m-qa-sub-btn::before { content:'•'; position:absolute; left:8px; color:#1890ff; font-weight:bold; }
+      .m-qa-sub-btn:active { background:#d6e8ff; }
+
+      /* 聊天消息区 */
+      .chat-container { flex:1; overflow-y:auto; padding:12px; background:transparent; min-height:0; }
+      .message { margin-bottom:14px; animation:fadeIn 0.25s ease; }
+      @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+      .message.user { text-align:right; }
+      .message-content {
+        display:inline-block; padding:11px 15px; border-radius:14px; max-width:82%;
+        line-height:1.65; word-wrap:break-word; text-align:left; font-size:14px;
+      }
+      .message.user .message-content { background:#1890ff; color:white; border-bottom-right-radius:4px; }
+      .message.bot .message-content { background:#fff; color:#333; border-bottom-left-radius:4px; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+      .message-content img { max-width:100%; height:auto; border-radius:6px; margin:6px 0; }
+      /* AI消息带头像 */
+      .msg-row-bot { display:flex; align-items:flex-start; gap:8px; text-align:left; }
+      .msg-bot-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+      .message.bot .message-content { max-width:calc(82% - 40px); }
+      .message.user .message-content { border-bottom-right-radius:4px; }
+      .message-content pre { background:#f5f5f5; padding:10px 12px; border-radius:8px; overflow-x:auto; margin:8px 0; font-size:13px; }
+      .message-content code { background:#f0f0f0; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:13px; }
+
+      /* 输入栏 */
+      .input-bar { background:#fff; padding:10px 14px; border-top:1px solid #eee; display:flex; gap:8px; align-items:flex-end; flex-shrink:0; z-index:50; }
+      .input-bar textarea { flex:1; padding:9px 14px; border:1px solid #ddd; border-radius:20px; font-size:14px; resize:none; outline:none; font-family:inherit; max-height:80px; line-height:1.4; }
+      .input-bar textarea:focus { border-color:#1890ff; }
+      .input-bar button { padding:9px 16px; border:none; border-radius:20px; font-size:13px; cursor:pointer; flex-shrink:0; font-weight:500; }
+      #mobileSendBtn { background:#1890ff; color:white; }
+      #mobileSendBtn:disabled { opacity:0.5; }
+      #mobileClearBtn { background:#f0f0f0; color:#666; }
+      .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; min-height:200px; color:#999; }
+      .empty-state h2 { color:#333; margin-top:14px; margin-bottom:6px; font-size:17px; }
+    }
+
+
+  </style>
+</head>
+<body>
+
+<!-- ===== 手机端 ===== -->
+<div class="mobile-wrapper" id="mobileWrapper">
+  <div id="mobileHomePage">
+    <div class="top-nav">
+      <div class="top-nav-left"><span>🤖 智能助手首页</span></div>
+      <div class="top-nav-right">
+        <div class="weather-badge" id="mobileWeather">⏳ 天气加载中...</div>
+        <button class="nav-btn blue" onclick="window.open('https://hbundaohang.github.io/shishidaohang/','_blank')">🧭</button>
+        <button class="nav-btn green" onclick="window.open('https://www.720yun.com/t/l5exr38jqm1nj9q5h6?from=timeline&isappinstalled=0&pano_id=Plt3k5n3D8iP5gfn','_blank')">🥽</button>
+      </div>
+    </div>
+
+    <div class="welcome-banner">
+      <h1>欢迎来到河北民族师范学院</h1>
+      <h2>智能助手服务平台</h2>
+      <p>为考生、新生和在校学生提供全方位的智能服务</p>
+      <div class="welcome-icons"><span>🎓</span><span>📖</span><span>🏛️</span><span>✨</span></div>
+    </div>
+
+    <div class="agent-card" onclick="showMobileChat('招生小助手')">
+      <div class="agent-icon">🎓</div>
+      <div class="agent-name">招生小助手</div>
+      <div class="agent-desc">7×24小时智能招生咨询</div>
+      <ul class="agent-features">
+        <li>学院简介与专业介绍</li>
+        <li>招生政策与批次解读</li>
+        <li>常见问题智能解答</li>
+      </ul>
+      <button class="agent-btn" onclick="event.stopPropagation();showMobileChat('招生小助手')">立即咨询</button>
+    </div>
+
+    <div class="agent-card" onclick="showMobileChat('迎新小助手')">
+      <div class="agent-icon">🎒</div>
+      <div class="agent-name">迎新小助手</div>
+      <div class="agent-desc">新生入学全流程指引</div>
+      <ul class="agent-features">
+        <li>报到流程与所需资料</li>
+        <li>宿舍与餐厅介绍</li>
+        <li>校园建筑简介</li>
+      </ul>
+      <button class="agent-btn" onclick="event.stopPropagation();showMobileChat('迎新小助手')">查看详情</button>
+    </div>
+
+    <div class="agent-card" onclick="showMobileChat('伴学小助手')">
+      <div class="agent-icon">📚</div>
+      <div class="agent-name">伴学小助手</div>
+      <div class="agent-desc">在校全周期学业陪伴</div>
+      <ul class="agent-features">
+        <li>校园服务与办事流程</li>
+        <li>奖助与成长信息</li>
+        <li>校园机构</li>
+      </ul>
+      <button class="agent-btn" onclick="event.stopPropagation();showMobileChat('伴学小助手')">开始使用</button>
+    </div>
+  </div>
+
+  <!-- 手机聊天页 - 招生 -->
+  <div id="mobileChatPage" class="chat-page" data-agent="zhaosheng">
+    <div class="chat-top-bar">
+      <div class="chat-top-title">招生小助手</div>
+      <div class="chat-top-right">
+        <button class="chat-back-btn" onclick="showMobileHome()">返回首页</button>
+        <div class="chat-weather"><span class="chat-weather-icon">☀️</span><span class="chat-weather-temp">23°C</span><span class="chat-weather-desc">阴天</span></div>
+        <button class="chat-top-btn blue" onclick="location.href='https://www.720yun.com/t/l5exr38jqm1nj9q5h6?from=timeline&isappinstalled=0&pano_id=Plt3k5n3D8iP5gfn'">🎥 VR校园</button>
+        <button class="chat-top-btn green" onclick="location.href='https://hbundaohang.github.io/shishidaohang/'">🗺️ 校园导航</button>
+      </div>
+    </div>
+    <!-- 快捷问题 -->
+    <div class="m-qa-section">
+      <div class="m-qa-header">快捷问题</div>
+      <div class="m-qa-list" id="mZsQaList"></div>
+    </div>
+    <!-- 消息区 -->
+    <div class="chat-container" id="mobileChatContainer">
+      <div class="empty-state" id="mobileEmptyState">
+        <div style="font-size:48px;">🤖</div>
+        <h2>欢迎使用智能助手</h2>
+        <p style="font-size:13px;">输入您的问题，开始智能对话</p>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea id="mobileInput" placeholder="输入您的问题..." rows="1" onkeydown="handleMobileKeyDown(event)"></textarea>
+      <button id="mobileClearBtn" onclick="clearMobileChat()">清空</button>
+      <button id="mobileSendBtn" onclick="sendMobileMessage()">发送</button>
+    </div>
+  </div>
+
+  <!-- 手机聊天页 - 迎新 -->
+  <div id="mobileChatPageYx" class="chat-page" data-agent="yingxin">
+    <div class="chat-top-bar">
+      <div class="chat-top-title">迎新小助手</div>
+      <div class="chat-top-right">
+        <button class="chat-back-btn" onclick="showMobileHome()">返回首页</button>
+        <div class="chat-weather"><span class="chat-weather-icon">☀️</span><span class="chat-weather-temp">23°C</span><span class="chat-weather-desc">阴天</span></div>
+        <button class="chat-top-btn blue" onclick="location.href='https://www.720yun.com/t/l5exr38jqm1nj9q5h6?from=timeline&isappinstalled=0&pano_id=Plt3k5n3D8iP5gfn'">🎥 VR校园</button>
+        <button class="chat-top-btn green" onclick="location.href='https://hbundaohang.github.io/shishidaohang/'">🗺️ 校园导航</button>
+      </div>
+    </div>
+    <div class="m-qa-section">
+      <div class="m-qa-header">快捷问题</div>
+      <div class="m-qa-list" id="mYxQaList"></div>
+    </div>
+    <div class="chat-container" id="mobileChatContainerYx">
+      <div class="empty-state" id="mobileEmptyStateYx">
+        <div style="font-size:48px;">🤖</div>
+        <h2>欢迎使用智能助手</h2>
+        <p style="font-size:13px;">输入您的问题，开始智能对话</p>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea id="mobileInputYx" placeholder="输入您的问题..." rows="1" onkeydown="handleMobileKeyDownYx(event)"></textarea>
+      <button id="mobileClearBtnYx" onclick="clearMobileChatYx()">清空</button>
+      <button id="mobileSendBtnYx" onclick="sendMobileMessageYx()">发送</button>
+    </div>
+  </div>
+
+  <!-- 手机聊天页 - 伴学 -->
+  <div id="mobileChatPageBx" class="chat-page" data-agent="banxue">
+    <div class="chat-top-bar">
+      <div class="chat-top-title">伴学小助手</div>
+      <div class="chat-top-right">
+        <button class="chat-back-btn" onclick="showMobileHome()">返回首页</button>
+        <div class="chat-weather"><span class="chat-weather-icon">☀️</span><span class="chat-weather-temp">23°C</span><span class="chat-weather-desc">阴天</span></div>
+        <button class="chat-top-btn blue" onclick="location.href='https://www.720yun.com/t/l5exr38jqm1nj9q5h6?from=timeline&isappinstalled=0&pano_id=Plt3k5n3D8iP5gfn'">🎥 VR校园</button>
+        <button class="chat-top-btn green" onclick="location.href='https://hbundaohang.github.io/shishidaohang/'">🗺️ 校园导航</button>
+      </div>
+    </div>
+    <div class="m-qa-section">
+      <div class="m-qa-header">快捷问题</div>
+      <div class="m-qa-list" id="mBxQaList"></div>
+    </div>
+    <div class="chat-container" id="mobileChatContainerBx">
+      <div class="empty-state" id="mobileEmptyStateBx">
+        <div style="font-size:48px;">🤖</div>
+        <h2>欢迎使用智能助手</h2>
+        <p style="font-size:13px;">输入您的问题，开始智能对话</p>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea id="mobileInputBx" placeholder="输入您的问题..." rows="1" onkeydown="handleMobileKeyDownBx(event)"></textarea>
+      <button id="mobileClearBtnBx" onclick="clearMobileChatBx()">清空</button>
+      <button id="mobileSendBtnBx" onclick="sendMobileMessageBx()">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PC 端 ===== -->
+<div class="pc-layout" id="pcLayout">
+  <!-- 左侧边栏 -->
+  <aside class="pc-sidebar">
+    <div class="pc-sidebar-logo">
+      <img src="school_logo.png" alt="校徽" style="width:56px;height:56px;border-radius:6px;flex-shrink:0;object-fit:contain;background:#fff;padding:2px;" onerror="this.style.display='none';this.parentElement.insertAdjacentHTML('afterbegin','<div style=\'width:56px;height:56px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;\'>🏫</div>');">
+      <div class="logo-text">
+        <div class="logo-title">河北民族师范学院</div>
+        <div class="logo-subtitle">智能助手平台</div>
+      </div>
+    </div>
+    <nav class="pc-sidebar-nav">
+      <div class="pc-nav-item active" id="navHome" onclick="showPcHome(event)">
+        <span class="pc-nav-icon">🏠</span><span class="pc-nav-text">首页</span>
+      </div>
+      <div class="pc-nav-item" id="navZhaosheng" onclick="showPcChat(event,'zhaosheng')">
+        <span class="pc-nav-icon">🎓</span><span class="pc-nav-text">招生小助手</span>
+      </div>
+      <div class="pc-nav-item" id="navYingxin" onclick="showPcChat(event,'yingxin')">
+        <span class="pc-nav-icon">🎒</span><span class="pc-nav-text">迎新小助手</span>
+      </div>
+      <div class="pc-nav-item" id="navBanxue" onclick="showPcChat(event,'banxue')">
+        <span class="pc-nav-icon">📚</span><span class="pc-nav-text">伴学小助手</span>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- 右侧主区域 -->
+  <div class="pc-main">
+    <!-- 顶部导航 -->
+    <header class="pc-top-header">
+      <div class="pc-header-title" id="pcHeaderTitle">智能助手首页</div>
+      <div class="pc-header-actions">
+        <div class="pc-weather-widget" id="pcWeatherWidget">
+          <span class="pc-weather-icon" id="pcWeatherIcon">☁️</span>
+          <span class="pc-weather-temp" id="pcWeatherTemp">--°C</span>
+          <span class="pc-weather-desc" id="pcWeatherDesc">加载中...</span>
+        </div>
+        <a href="https://hbundaohang.github.io/shishidaohang/" target="_blank" class="pc-header-btn">🗺️ 校园导航</a>
+        <a href="https://www.720yun.com/t/l5exr38jqm1nj9q5h6?from=timeline&isappinstalled=0&pano_id=Plt3k5n3D8iP5gfn" target="_blank" class="pc-header-btn">🎥 VR校园</a>
+
+      </div>
+    </header>
+
+    <!-- PC 主内容 -->
+    <div class="pc-main-content">
+
+      <!-- === 首页 === -->
+      <div id="pcHomePage">
+        <div class="pc-hero-banner">
+          <h1>欢迎来到河北民族师范学院</h1>
+          <h2>智能助手服务平台</h2>
+          <p>为考生、新生和在校学生提供全方位的智能服务</p>
+          <div class="pc-banner-icons"><span>🎓</span><span>📖</span><span>🏛️</span><span>✨</span></div>
+        </div>
+        <div class="pc-feature-cards">
+          <div class="pc-feature-card" onclick="showPcChat(event,'zhaosheng')">
+            <div class="pc-card-icon">🎓</div>
+            <div class="pc-card-title">招生小助手</div>
+            <div class="pc-card-desc">7×24小时智能招生咨询</div>
+            <ul class="pc-card-features">
+              <li>学院简介与专业介绍</li>
+              <li>招生政策与批次解读</li>
+              <li>常见问题智能解答</li>
+            </ul>
+            <span class="pc-card-btn">立即咨询</span>
+          </div>
+          <div class="pc-feature-card" onclick="showPcChat(event,'yingxin')">
+            <div class="pc-card-icon">🎒</div>
+            <div class="pc-card-title">迎新小助手</div>
+            <div class="pc-card-desc">新生入学全流程指引</div>
+            <ul class="pc-card-features">
+              <li>报到流程与所需资料</li>
+              <li>宿舍与餐厅介绍</li>
+              <li>校园建筑简介</li>
+            </ul>
+            <span class="pc-card-btn">查看详情</span>
+          </div>
+          <div class="pc-feature-card" onclick="showPcChat(event,'banxue')">
+            <div class="pc-card-icon">📚</div>
+            <div class="pc-card-title">伴学小助手</div>
+            <div class="pc-card-desc">在校全周期学业陪伴</div>
+            <ul class="pc-card-features">
+              <li>校园服务与办事流程</li>
+              <li>奖助与成长信息</li>
+              <li>校园机构</li>
+            </ul>
+            <span class="pc-card-btn">开始使用</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- === 招生聊天页 === -->
+      <div id="pcZhaoshengPage" class="pc-chat-page">
+        <div class="pc-assistant-header">
+          <div class="pc-assistant-icon">🎓</div>
+          <div class="pc-assistant-info">
+            <h1>河北民族招生小助手</h1>
+            <p>面向潜在考生及家长，提供7×24小时智能化招生咨询服务</p>
+          </div>
+        </div>
+        <div class="pc-chat-layout">
+          <aside class="pc-quick-questions" id="pcZhaoshengQs"></aside>
+          <div class="pc-chat-box">
+            <div class="pc-chat-messages" id="pcZhaoshengMsgs">
+              <div class="pc-message pc-ai-message">
+                <div class="pc-message-avatar">🎓</div>
+                <div class="pc-message-bubble">
+                  <p>您好！我是河北民族师范学院招生小助手，很高兴为您服务！</p>
+                  <p>我可以为您解答关于学院简介、专业介绍、招生政策、收费标准等方面的问题。</p>
+                  <p>请问有什么可以帮助您的吗？</p>
+                </div>
+              </div>
+            </div>
+            <div class="pc-chat-input-area">
+              <div class="pc-input-wrapper">
+                <textarea id="pcZhaoshengInput" placeholder="输入您的问题..." rows="1"></textarea>
+                <button class="pc-clear-btn" onclick="clearPcChat('zhaosheng')">清空</button>
+                <button class="pc-send-btn" id="pcZhaoshengSend" onclick="sendPcMessage('zhaosheng')">发送</button>
+              </div>
+              <div class="pc-input-hint">按 Enter 发送消息</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === 迎新聊天页 === -->
+      <div id="pcYingxinPage" class="pc-chat-page">
+        <div class="pc-assistant-header">
+          <div class="pc-assistant-icon">🎒</div>
+          <div class="pc-assistant-info">
+            <h1>河北民族迎新小助手</h1>
+            <p>为新生提供入学全流程指引，让入学报到更加便捷</p>
+          </div>
+        </div>
+        <div class="pc-chat-layout">
+          <aside class="pc-quick-questions" id="pcYingxinQs"></aside>
+          <div class="pc-chat-box">
+            <div class="pc-chat-messages" id="pcYingxinMsgs">
+              <div class="pc-message pc-ai-message">
+                <div class="pc-message-avatar">🎒</div>
+                <div class="pc-message-bubble">
+                  <p>您好！我是迎新小助手，恭喜您即将成为河北民族师范学院的一员！</p>
+                  <p>我可以为您解答报到流程、所需材料、宿舍安排、校园生活等方面的问题。</p>
+                  <p>请问有什么可以帮助您的吗？</p>
+                </div>
+              </div>
+            </div>
+            <div class="pc-chat-input-area">
+              <div class="pc-input-wrapper">
+                <textarea id="pcYingxinInput" placeholder="输入您的问题..." rows="1"></textarea>
+                <button class="pc-clear-btn" onclick="clearPcChat('yingxin')">清空</button>
+                <button class="pc-send-btn" id="pcYingxinSend" onclick="sendPcMessage('yingxin')">发送</button>
+              </div>
+              <div class="pc-input-hint">按 Enter 发送消息</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === 伴学聊天页 === -->
+      <div id="pcBanxuePage" class="pc-chat-page">
+        <div class="pc-assistant-header">
+          <div class="pc-assistant-icon">📚</div>
+          <div class="pc-assistant-info">
+            <h1>河北民族伴学小助手</h1>
+            <p>为在校学生提供全周期学业陪伴，助力成长成才</p>
+          </div>
+        </div>
+        <div class="pc-chat-layout">
+          <aside class="pc-quick-questions" id="pcBanxueQs"></aside>
+          <div class="pc-chat-box">
+            <div class="pc-chat-messages" id="pcBanxueMsgs">
+              <div class="pc-message pc-ai-message">
+                <div class="pc-message-avatar">📚</div>
+                <div class="pc-message-bubble">
+                  <p>您好！我是伴学小助手，将陪伴您度过美好的大学时光！</p>
+                  <p>我可以为您解答选课咨询、第二课堂等方面的问题。</p>
+                  <p>请问有什么可以帮助您的吗？</p>
+                </div>
+              </div>
+            </div>
+            <div class="pc-chat-input-area">
+              <div class="pc-input-wrapper">
+                <textarea id="pcBanxueInput" placeholder="输入您的问题..." rows="1"></textarea>
+                <button class="pc-clear-btn" onclick="clearPcChat('banxue')">清空</button>
+                <button class="pc-send-btn" id="pcBanxueSend" onclick="sendPcMessage('banxue')">发送</button>
+              </div>
+              <div class="pc-input-hint">按 Enter 发送消息</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end pc-main-content -->
+  </div><!-- end pc-main -->
+</div><!-- end pc-layout -->
+
+<script>
+// ==================== 配置 ====================
+const CONFIG = {
+  API_BASE: 'https://api.coze.cn',
+  BOT_ID: '7581683129678118948',
+  PAT: 'pat_zDA8W5qawgQcRSmfUCmXaLS7STNZ09ZGbebBzol1z322JHHZIN0MMxMF2ZgWCxJs'
+};
+
+// 各助手配置
+const AGENT_CONFIG = {
+  zhaosheng: { icon: '🎓', name: '河北民族招生小助手', title: '招生小助手' },
+  yingxin:   { icon: '🎒', name: '河北民族迎新小助手',  title: '迎新小助手' },
+  banxue:    { icon: '📚', name: '河北民族伴学小助手',  title: '伴学小助手' }
+};
+
+let mobileConversationId = '';
+let isLoading = false;
+const userId = 'user_' + Date.now();
+
+if (typeof marked !== 'undefined') {
+  // 禁用 GFM 删除线和 autolink 误解析
+  var renderer = new marked.Renderer();
+  renderer.del = function(token) { return token.text || token; };
+  renderer.codespan = function(token) { return '<code>' + (token.text || token) + '</code>'; };
+  marked.use({ renderer: renderer, gfm: false });
+  marked.setOptions({ breaks: true });
+}
+
+// ==================== 天气 ====================
+function fetchWeather() {
+  const apiUrl = 'https://api.open-meteo.com/v1/forecast?latitude=40.97&longitude=117.93&current=temperature_2m,weather_code&timezone=Asia/Shanghai';
+  fetch(apiUrl)
+    .then(res => res.json())
+    .then(data => {
+      if (data.current) {
+        const temp = Math.round(data.current.temperature_2m);
+        const code = data.current.weather_code;
+        const icon = getWeatherIconByWMO(code);
+        const desc = getWeatherDescByWMO(code);
+        // PC端
+        document.getElementById('pcWeatherIcon').textContent = icon;
+        document.getElementById('pcWeatherTemp').textContent = temp + '°C';
+        document.getElementById('pcWeatherDesc').textContent = desc;
+        // 手机端
+        document.getElementById('mobileWeather').textContent = icon + ' ' + temp + '°C';
+      }
+    })
+    .catch(() => {
+      document.getElementById('pcWeatherDesc').textContent = '承德';
+    });
+}
+
+function getWeatherIconByWMO(code) {
+  if (code === 0) return '☀️';
+  if (code <= 3) return '⛅';
+  if (code <= 9) return '🌫️';
+  if (code <= 19) return '🌧️';
+  if (code <= 29) return '⛈️';
+  if (code <= 39) return '❄️';
+  if (code <= 49) return '🌫️';
+  if (code <= 59) return '🌧️';
+  if (code <= 69) return '🌧️';
+  if (code <= 79) return '❄️';
+  if (code <= 84) return '🌧️';
+  if (code <= 94) return '⛈️';
+  if (code <= 99) return '⛈️';
+  return '☁️';
+}
+
+function getWeatherDescByWMO(code) {
+  const m = {0:'晴',1:'基本晴朗',2:'局部多云',3:'阴天',45:'雾',48:'冻雾',51:'小毛毛雨',53:'毛毛雨',55:'大毛毛雨',61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',80:'阵雨',81:'中阵雨',82:'强阵雨',85:'阵雪',86:'强阵雪',95:'雷阵雨',96:'雷阵雨伴冰雹',99:'强雷阵雨伴冰雹'};
+  return m[code] || '多云';
+}
+fetchWeather();
+
+// ==================== PC 导航 ====================
+function showPcHome(e) {
+  if (e) e.preventDefault();
+  document.getElementById('pcHomePage').style.display = 'block';
+  document.getElementById('pcZhaoshengPage').classList.remove('active');
+  document.getElementById('pcYingxinPage').classList.remove('active');
+  document.getElementById('pcBanxuePage').classList.remove('active');
+  document.querySelectorAll('.pc-nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('navHome').classList.add('active');
+  document.getElementById('pcHeaderTitle').textContent = '智能助手首页';
+}
+
+function showPcChat(e, agent) {
+  if (e) e.preventDefault();
+  document.getElementById('pcHomePage').style.display = 'none';
+  document.getElementById('pcZhaoshengPage').classList.remove('active');
+  document.getElementById('pcYingxinPage').classList.remove('active');
+  document.getElementById('pcBanxuePage').classList.remove('active');
+  document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Page').classList.add('active');
+  document.querySelectorAll('.pc-nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('nav' + agent.charAt(0).toUpperCase() + agent.slice(1)).classList.add('active');
+  document.getElementById('pcHeaderTitle').textContent = AGENT_CONFIG[agent].title;
+}
+
+// ==================== 二级菜单 ====================
+class QuickQuestionMenu {
+  constructor() { this.expandedItem = null; }
+  render(containerId, menuData, onSelect) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<h3>常见问题</h3>';
+    menuData.forEach(item => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'pc-quick-item';
+      const mainBtn = document.createElement('button');
+      mainBtn.className = 'pc-question-btn pc-q-main';
+      mainBtn.textContent = item.name;
+      mainBtn.onclick = () => this.toggle(wrapper, item);
+      wrapper.appendChild(mainBtn);
+      const subContainer = document.createElement('div');
+      subContainer.className = 'pc-q-sub';
+      if (item.subItems) {
+        item.subItems.forEach(sub => {
+          const subBtn = document.createElement('button');
+          subBtn.className = 'pc-question-btn';
+          subBtn.textContent = sub;
+          subBtn.onclick = (e) => { e.stopPropagation(); onSelect(sub); };
+          subContainer.appendChild(subBtn);
+        });
+      }
+      wrapper.appendChild(subContainer);
+      container.appendChild(wrapper);
+    });
+  }
+  toggle(wrapper, item) {
+    const sub = wrapper.querySelector('.pc-q-sub');
+    if (wrapper.classList.contains('expanded')) {
+      wrapper.classList.remove('expanded');
+      sub.style.display = 'none';
+      this.expandedItem = null;
+    } else {
+      if (this.expandedItem) {
+        this.expandedItem.classList.remove('expanded');
+        this.expandedItem.querySelector('.pc-q-sub').style.display = 'none';
+      }
+      wrapper.classList.add('expanded');
+      sub.style.display = 'flex';
+      this.expandedItem = wrapper;
+    }
+  }
+}
+
+// 菜单数据
+const zhaoshengMenuData = [
+  { name: '学校基础信息', subItems: ['学校简介'] },
+  { name: '招生计划与批次', subItems: ['招生计划', '招生章程'] },
+  { name: '费用与资助', subItems: ['学费标准（分专业：师范/非师范/艺术）', '助学贷款与相关流程'] },
+  { name: '学院专业', subItems: ['文学与传媒学院有什么专业', '北雁商学院有什么专业', '外国语学院有什么专业', '美术与设计学院有什么专业', '数学与计算机科学学院有什么专业'] },
+  { name: '人才培养方案', subItems: ['人工智能人才培养方案', '小学教育人才培养方案', '汉语言文学人才培养方案'] }
+];
+
+const yingxinMenuData = [
+  { name: '报到核心信息', subItems: ['入学指南', '当年新生报到时间、地点、报到流程', '报到必备材料清单：录取通知书、身份证、档案等', '学费、住宿费、教材费的缴费方式'] },
+  { name: '校园生活信息', subItems: ['宿舍信息', '美食推荐', '新生安全提示'] },
+  { name: '入学准备与后续安排', subItems: ['军训', '新生体检安排'] },
+  { name: '新生高频问题', subItems: ['违规电器', '课表查看', '大学必备APP'] },
+  { name: '学校建筑简介', subItems: ['图书馆简介', '致远楼简介', '产教楼简介', '公教楼简介', '修德楼简介', '砺能楼简介', '行政楼简介'] },
+  { name: '其他问题', subItems: ['快递地址'] }
+];
+
+const banxueMenuData = [
+  { name: '校园服务与办事流程', subItems: ['校医院：地址、急诊电话', '相关部门办公电话', '选课说明', '学分情况说明'] },
+  { name: '奖助与成长信息', subItems: ['奖助学金：国家奖学金、励志奖学金、校级奖学金、助学金的申请条件、时间、流程', '社团介绍'] },
+  { name: '比赛与竞赛', subItems: ['比赛'] },
+  { name: '机构设置', subItems: ['团委', '信息中心', '安全工作处', '纪检委'] }
+];
+
+// 初始化菜单
+const zhaoshengMenu = new QuickQuestionMenu();
+zhaoshengMenu.render('pcZhaoshengQs', zhaoshengMenuData, q => sendQuickQuestion('zhaosheng', q));
+
+const yingxinMenu = new QuickQuestionMenu();
+yingxinMenu.render('pcYingxinQs', yingxinMenuData, q => sendQuickQuestion('yingxin', q));
+
+const banxueMenu = new QuickQuestionMenu();
+banxueMenu.render('pcBanxueQs', banxueMenuData, q => sendQuickQuestion('banxue', q));
+
+// ==================== Coze API ====================
+async function createConv() {
+  try {
+    const r = await fetch(CONFIG.API_BASE + '/v1/conversation/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.PAT },
+      body: JSON.stringify({ bot_id: CONFIG.BOT_ID })
+    });
+    const d = await r.json();
+    if (d.code === 0 && d.data) return d.data.id;
+    return null;
+  } catch(e) { return null; }
+}
+
+async function streamChat(convId, query, handlers) {
+  let conversationId = convId;
+  if (!conversationId) {
+    conversationId = await createConv();
+    if (!conversationId) { handlers.onError('创建会话失败'); return; }
+  }
+
+  handlers.onMessage(query, true);
+  if (handlers.inputEl) { handlers.inputEl.value = ''; handlers.inputEl.style.height = 'auto'; }
+
+  try {
+    const resp = await fetch(CONFIG.API_BASE + '/v3/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.PAT },
+      body: JSON.stringify({
+        conversation_id: conversationId, bot_id: CONFIG.BOT_ID, user_id: userId, stream: true,
+        auto_save_history: true,
+        additional_messages: [{ role: 'user', content: query, content_type: 'text' }]
+      })
+    });
+    if (!resp.ok) { handlers.onError('请求失败: ' + resp.status); return; }
+
+    // 兼容不支持 ReadableStream 的浏览器（如部分 iOS Safari）
+    if (!resp.body || typeof resp.body.getReader !== 'function') {
+      const text = await resp.text();
+      let full = '';
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i].trim();
+        if (!l || !l.startsWith('event:')) continue;
+        const et = l.slice(6).trim();
+        if (i + 1 < lines.length && lines[i + 1].startsWith('data:')) {
+          const dl = lines[i + 1].slice(5).trim();
+          i++;
+          try {
+            const ed = JSON.parse(dl);
+            if (et === 'conversation.message.completed') {
+              if (ed.type === 'answer' && ed.content) {
+                full = ed.content;
+              }
+            }
+          } catch(e) {}
+        }
+      }
+      if (full) {
+        const parsed = parseBotContent(full);
+        handlers.onMessage(parsed, false);
+      } else {
+        handlers.onMessage('抱歉，未获取到回复内容', false);
+      }
+      if (handlers.sendBtn) handlers.sendBtn.disabled = false;
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let full = '', botDiv = null, buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i].trim();
+        if (!l || !l.startsWith('event:')) continue;
+        const et = l.slice(6).trim();
+        if (i + 1 < lines.length && lines[i + 1].startsWith('data:')) {
+          const dl = lines[i + 1].slice(5).trim();
+          i++;
+          try {
+            const ed = JSON.parse(dl);
+            if (et === 'conversation.message.delta') {
+              if (ed.role === 'assistant' && ed.type === 'answer') {
+                full += ed.content || '';
+                const parsed = parseBotContent(full);
+                if (!botDiv) {
+                  botDiv = handlers.onMessage(parsed, false);
+                } else {
+                  botDiv.innerHTML = typeof marked !== 'undefined' ? marked.parse((parsed||'').replace(/~~/g, '～')) : parsed;
+                }
+              }
+            } else if (et === 'conversation.message.completed') {
+              if (ed.type === 'answer' && ed.content) {
+                full = ed.content || full;
+                const parsed = parseBotContent(full);
+                if (botDiv) botDiv.innerHTML = typeof marked !== 'undefined' ? marked.parse((parsed||'').replace(/~~/g, '～')) : parsed;
+              }
+            } else if (et === 'conversation.chat.completed') {
+              handlers.onComplete && handlers.onComplete();
+            } else if (et === 'conversation.chat.failed') {
+              handlers.onError(ed.last_error ? ed.last_error.msg || '对话失败' : '对话失败');
+            }
+          } catch(e) {}
+        }
+      }
+    }
+    if (!botDiv) handlers.onMessage('抱歉，未获取到回复内容', false);
+  } catch(e) { handlers.onError('网络错误: ' + e.message); }
+  if (handlers.sendBtn) handlers.sendBtn.disabled = false;
+}
+
+// 解析智能体返回的JSON内容
+function parseBotContent(content) {
+  if (!content) return '';
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const item = parsed[0];
+      if (item.output) return item.output;
+      if (item.content) return item.content;
+      if (item.answer) return item.answer;
+    }
+    if (parsed.output) return parsed.output;
+    if (parsed.content) return parsed.content;
+    if (parsed.answer) return parsed.answer;
+    if (parsed.message) return parsed.message;
+  } catch (e) {}
+  return content;
+}
+
+// 保存各助手会话ID
+const agentConvIds = { zhaosheng: '', yingxin: '', banxue: '' };
+
+// 清空PC端对话
+function clearPcChat(agent) {
+  const msgs = document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Msgs');
+  const input = document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Input');
+  const cfg = AGENT_CONFIG[agent];
+  msgs.innerHTML = `
+    <div class="pc-message pc-ai-message">
+      <div class="pc-message-avatar">${cfg.icon}</div>
+      <div class="pc-message-bubble">
+        <p>您好！我是${cfg.name}，很高兴为您服务！</p>
+        <p>请问有什么可以帮助您的吗？</p>
+      </div>
+    </div>
+  `;
+  input.value = '';
+  input.style.height = 'auto';
+  agentConvIds[agent] = '';
+}
+
+function sendPcMessage(agent) {
+  const cfg = AGENT_CONFIG[agent];
+  const input = document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Input');
+  const msgs = document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Msgs');
+  const sendBtn = document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Send');
+  const q = input.value.trim();
+  if (!q || isLoading) return;
+  isLoading = true;
+  sendBtn.disabled = true;
+
+  streamChat(agentConvIds[agent], q, {
+    onMessage: function(content, isUser) {
+      const div = document.createElement('div');
+      div.className = 'pc-message ' + (isUser ? 'pc-user-message' : 'pc-ai-message');
+      if (isUser) {
+        div.innerHTML = '<div class="pc-message-bubble">' + escapeHtml(content) + '</div><div class="pc-user-avatar">👤</div>';
+      } else {
+        div.innerHTML = '<div class="pc-message-avatar">' + cfg.icon + '</div><div class="pc-message-bubble"></div>';
+        const bubble = div.querySelector('.pc-message-bubble');
+        bubble.innerHTML = typeof marked !== 'undefined' ? marked.parse((content||'').replace(/~~/g, '～')) : content;
+      }
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div.querySelector('.pc-message-bubble');
+    },
+    onComplete: function() {},
+    onError: function(msg) {
+      const div = document.createElement('div');
+      div.className = 'pc-message pc-ai-message';
+      div.innerHTML = '<div class="pc-message-avatar">' + cfg.icon + '</div><div class="pc-message-bubble">' + msg + '</div>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    },
+    sendBtn: sendBtn,
+    inputEl: input
+  });
+
+  // 保存会话ID
+  const origCreate = createConv;
+  createConv = async function() {
+    const id = await origCreate();
+    agentConvIds[agent] = id;
+    return id;
+  };
+
+  isLoading = false;
+  input.focus();
+}
+
+function sendQuickQuestion(agent, question) {
+  const input = document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Input');
+  input.value = question;
+  sendPcMessage(agent);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 输入框自动高度
+['Zhaosheng', 'Yingxin', 'Banxue'].forEach(function(name) {
+  const input = document.getElementById('pc' + name + 'Input');
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendPcMessage(name.charAt(0).toLowerCase() + name.slice(1));
+    }
+  });
+});
+
+// ==================== 手机端函数 ====================
+
+// 手机端各助手会话ID
+const mobileConvIds = { zhaosheng: '', yingxin: '', banxue: '' };
+let mobileCurrentAgent = 'zhaosheng';
+
+function showMobileChat(agentKey) {
+  // 隐藏首页
+  document.getElementById('mobileHomePage').style.display = 'none';
+  // 隐藏所有聊天页
+  document.querySelectorAll('.chat-page').forEach(function(p) { p.classList.remove('active'); });
+  // 显示对应聊天页
+  if (agentKey === '招生小助手') {
+    document.getElementById('mobileChatPage').classList.add('active');
+    mobileCurrentAgent = 'zhaosheng';
+  } else if (agentKey === '迎新小助手') {
+    document.getElementById('mobileChatPageYx').classList.add('active');
+    mobileCurrentAgent = 'yingxin';
+  } else {
+    document.getElementById('mobileChatPageBx').classList.add('active');
+    mobileCurrentAgent = 'banxue';
+  }
+  window.scrollTo(0, 0);
+}
+
+function showMobileHome() {
+  document.getElementById('mobileHomePage').style.display = 'block';
+  document.querySelectorAll('.chat-page').forEach(function(p) { p.classList.remove('active'); });
+  window.scrollTo(0, 0);
+}
+
+// ===== 手机端常见问题渲染与交互 =====
+function renderMobileQa(containerId, menuData, agentKey) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  menuData.forEach(function(item) {
+    // 主按钮（可折叠）
+    var mainBtn = document.createElement('button');
+    mainBtn.className = 'm-qa-btn';
+    mainBtn.innerHTML = '<span>' + item.name + '</span><span class="m-qa-arrow">▼</span>';
+    
+    // 子容器
+    var subDiv = document.createElement('div');
+    subDiv.className = 'm-qa-sub';
+    if (item.subItems) {
+      item.subItems.forEach(function(sub) {
+        var subBtn = document.createElement('button');
+        subBtn.className = 'm-qa-sub-btn';
+        subBtn.textContent = sub;
+        subBtn.onclick = function(e) { e.stopPropagation(); sendMobileQuickQuestion(agentKey, sub); };
+        subDiv.appendChild(subBtn);
+      });
+    }
+    // 点击主按钮展开/收起
+    mainBtn.onclick = function() {
+      var isExp = mainBtn.classList.contains('expanded');
+      // 收起所有同级按钮
+      container.querySelectorAll('.m-qa-btn.expanded').forEach(function(b) { b.classList.remove('expanded'); });
+      container.querySelectorAll('.m-qa-sub.show').forEach(function(s) { s.classList.remove('show'); });
+      if (!isExp) {
+        mainBtn.classList.add('expanded');
+        subDiv.classList.add('show');
+      }
+    };
+
+    container.appendChild(mainBtn);
+    container.appendChild(subDiv);
+  });
+}
+
+// 初始化手机端三个页面的常见问题
+renderMobileQa('mZsQaList', zhaoshengMenuData, 'zhaosheng');
+renderMobileQa('mYxQaList', yingxinMenuData, 'yingxin');
+renderMobileQa('mBxQaList', banxueMenuData, 'banxue');
+
+// 常见问题标题点击折叠
+document.querySelectorAll('.m-qa-header').forEach(function(header) {
+  header.onclick = function() {
+    this.classList.toggle('collapsed');
+  };
+});
+
+// ===== 手机端发送消息通用函数 =====
+function doSendMobileMessage(agent, inputEl, sendBtn, emptyStateId, containerEl) {
+  var q = inputEl.value.trim();
+  if (!q || isLoading) return;
+  isLoading = true;
+  sendBtn.disabled = true;
+
+  // 隐藏空状态提示
+  var es = document.getElementById(emptyStateId);
+  if (es) es.style.display = 'none';
+
+  streamChat(mobileConvIds[agent], q, {
+    onMessage: function(content, isUser) {
+      var div = document.createElement('div');
+      div.className = 'message ' + (isUser ? 'user' : 'bot');
+      var cfg = AGENT_CONFIG[agent];
+      if (isUser) {
+        div.innerHTML = '<div class="message-content">' + escapeHtml(content) + '</div>';
+      } else {
+        div.className = 'msg-row-bot message bot';
+        div.innerHTML = '<div class="msg-bot-avatar">' + cfg.icon + '</div><div class="message-content">' + (typeof marked !== 'undefined' ? marked.parse((content||'').replace(/~~/g, '～')) : content) + '</div>';
+      }
+      containerEl.appendChild(div);
+      containerEl.scrollTop = containerEl.scrollHeight;
+      return isUser ? null : div.querySelector('.message-content');
+    },
+    onComplete: function() {},
+    onError: function(msg) {
+      var es2 = document.getElementById(emptyStateId);
+      if (es2) es2.style.display = 'none';
+      var div = document.createElement('div');
+      div.className = 'msg-row-bot message bot';
+      var cfg = AGENT_CONFIG[agent];
+      div.innerHTML = '<div class="msg-bot-avatar">' + cfg.icon + '</div><div class="message-content">' + msg + '</div>';
+      containerEl.appendChild(div);
+      containerEl.scrollTop = containerEl.scrollHeight;
+    },
+    sendBtn: sendBtn,
+    inputEl: inputEl
+  });
+
+  var origCreate3 = createConv;
+  createConv = async function() {
+    var id = await origCreate3();
+    mobileConvIds[agent] = id;
+    return id;
+  };
+
+  isLoading = false;
+  inputEl.focus();
+}
+
+function sendMobileQuickQuestion(agent, question) {
+  var nameMap = { zhaosheng: '', yingxin: 'Yx', banxue: 'Bx' };
+  var suffix = nameMap[agent];
+  var input = document.getElementById('mobileInput' + suffix);
+  input.value = question;
+  var sendBtn = document.getElementById('mobileSendBtn' + suffix);
+  var container = document.getElementById('mobileChatContainer' + suffix);
+  var emptyId = suffix === '' ? 'mobileEmptyState' : 'mobileEmptyState' + suffix;
+  doSendMobileMessage(agent, input, sendBtn, emptyId, container);
+}
+
+// ---- 招生 ----
+var mobileInput = document.getElementById('mobileInput');
+mobileInput.addEventListener('input', function() { this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,80)+'px'; });
+function handleMobileKeyDown(e) { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMobileMessage(); } }
+
+function clearMobileChat() {
+  mobileConvIds.zhaosheng = '';
+  var c = document.getElementById('mobileChatContainer');
+  c.innerHTML = '<div class="empty-state" id="mobileEmptyState"><div style="font-size:48px;">🤖</div><h2>欢迎使用智能助手</h2><p style="font-size:13px;">输入您的问题，开始智能对话</p></div>';
+  mobileInput.value = ''; mobileInput.style.height = 'auto';
+}
+function sendMobileMessage() {
+  doSendMobileMessage('zhaosheng', mobileInput, document.getElementById('mobileSendBtn'), 'mobileEmptyState', document.getElementById('mobileChatContainer'));
+}
+
+// ---- 迎新 ----
+var mobileInputYx = document.getElementById('mobileInputYx');
+mobileInputYx.addEventListener('input', function() { this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,80)+'px'; });
+function handleMobileKeyDownYx(e) { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMobileMessageYx(); } }
+function clearMobileChatYx() {
+  mobileConvIds.yingxin = '';
+  var c = document.getElementById('mobileChatContainerYx');
+  c.innerHTML = '<div class="empty-state" id="mobileEmptyStateYx"><div style="font-size:48px;">🤖</div><h2>欢迎使用智能助手</h2><p style="font-size:13px;">输入您的问题，开始智能对话</p></div>';
+  mobileInputYx.value = ''; mobileInputYx.style.height = 'auto';
+}
+function sendMobileMessageYx() {
+  doSendMobileMessage('yingxin', mobileInputYx, document.getElementById('mobileSendBtnYx'), 'mobileEmptyStateYx', document.getElementById('mobileChatContainerYx'));
+}
+
+// ---- 伴学 ----
+var mobileInputBx = document.getElementById('mobileInputBx');
+mobileInputBx.addEventListener('input', function() { this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,80)+'px'; });
+function handleMobileKeyDownBx(e) { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMobileMessageBx(); } }
+function clearMobileChatBx() {
+  mobileConvIds.banxue = '';
+  var c = document.getElementById('mobileChatContainerBx');
+  c.innerHTML = '<div class="empty-state" id="mobileEmptyStateBx"><div style="font-size:48px;">🤖</div><h2>欢迎使用智能助手</h2><p style="font-size:13px;">输入您的问题，开始智能对话</p></div>';
+  mobileInputBx.value = ''; mobileInputBx.style.height = 'auto';
+}
+function sendMobileMessageBx() {
+  doSendMobileMessage('banxue', mobileInputBx, document.getElementById('mobileSendBtnBx'), 'mobileEmptyStateBx', document.getElementById('mobileChatContainerBx'));
+}
+
+// ===== 图片点击跳转新窗口查看 =====
+document.addEventListener('click', function(e) {
+  if (e.target.tagName === 'IMG' && (e.target.closest('.pc-message-bubble') || e.target.closest('.message-content'))) {
+    window.open(e.target.src, '_blank');
+  }
+});
+</script>
+</body>
+</html>

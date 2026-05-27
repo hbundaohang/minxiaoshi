@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>河北民族师范学院 - 智能助手平台</title>
   <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.umd.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{DEFAULT:'#2563EB',light:'#DBEAFE',dark:'#1D4ED8'},accent:'#F97316',muted:{DEFAULT:'#6B7280',light:'#F3F4F6'},card:'#FFFFFF',bg:'#F8FAFC'},borderRadius:{xl:'0.75rem','2xl':'1rem'}}}}</script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -377,6 +382,11 @@
       .empty-state h2 { color:#333; margin-top:14px; margin-bottom:6px; font-size:17px; }
     }
 
+    /* 招生咨询卡片样式 */
+    .card { background: #fff; border-radius: 1rem; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+    .card-hover:hover { border-color: #93C5FD; box-shadow: 0 8px 25px rgba(37,99,235,.08); }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
 
   </style>
 </head>
@@ -431,7 +441,7 @@
       <div class="agent-desc">在校全周期学业陪伴</div>
       <ul class="agent-features">
         <li>校园服务与办事流程</li>
-        <li>奖助与成长信息</li>
+        <li>奖学金信息</li>
         <li>校园机构</li>
       </ul>
       <button class="agent-btn" onclick="event.stopPropagation();showMobileChat('伴学小助手')">开始使用</button>
@@ -526,6 +536,17 @@
       <button id="mobileSendBtnBx" onclick="sendMobileMessageBx()">发送</button>
     </div>
   </div>
+
+  <!-- 手机端 - 招生咨询页 -->
+  <div id="mobileConsultPage" class="chat-page" style="display:none;">
+    <div class="chat-top-bar">
+      <div class="chat-top-title">招生咨询智能匹配</div>
+      <div class="chat-top-right">
+        <button class="chat-back-btn" onclick="showMobileChat('招生小助手')">返回</button>
+      </div>
+    </div>
+    <div id="consultRootMobile" style="flex:1;overflow-y:auto;padding:8px;"></div>
+  </div>
 </div>
 
 <!-- ===== PC 端 ===== -->
@@ -546,6 +567,7 @@
       <div class="pc-nav-item" id="navZhaosheng" onclick="showPcChat(event,'zhaosheng')">
         <span class="pc-nav-icon">🎓</span><span class="pc-nav-text">招生小助手</span>
       </div>
+
       <div class="pc-nav-item" id="navYingxin" onclick="showPcChat(event,'yingxin')">
         <span class="pc-nav-icon">🎒</span><span class="pc-nav-text">迎新小助手</span>
       </div>
@@ -612,7 +634,7 @@
             <div class="pc-card-desc">在校全周期学业陪伴</div>
             <ul class="pc-card-features">
               <li>校园服务与办事流程</li>
-              <li>奖助与成长信息</li>
+              <li>奖学金信息</li>
               <li>校园机构</li>
             </ul>
             <span class="pc-card-btn">开始使用</span>
@@ -722,6 +744,15 @@
         </div>
       </div>
 
+      <!-- === 招生咨询页 === -->
+      <div id="pcZhaoshengConsultPage" class="pc-chat-page" style="display:none;flex-direction:column;min-height:calc(100vh - 80px);">
+        <div style="padding:8px 0;display:flex;align-items:center;gap:12px;">
+          <button onclick="showPcChat(event,'zhaosheng')" style="background:#1a73e8;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:14px;">← 返回招生小助手</button>
+          <span style="font-size:15px;font-weight:600;color:#333;">招生咨询智能匹配</span>
+        </div>
+        <div id="consultRootPc" style="flex:1;overflow-y:auto;"></div>
+      </div>
+
     </div><!-- end pc-main-content -->
   </div><!-- end pc-main -->
 </div><!-- end pc-layout -->
@@ -808,6 +839,7 @@ function showPcHome(e) {
   document.getElementById('pcZhaoshengPage').classList.remove('active');
   document.getElementById('pcYingxinPage').classList.remove('active');
   document.getElementById('pcBanxuePage').classList.remove('active');
+  document.getElementById('pcZhaoshengConsultPage').style.display = 'none';
   document.querySelectorAll('.pc-nav-item').forEach(i => i.classList.remove('active'));
   document.getElementById('navHome').classList.add('active');
   document.getElementById('pcHeaderTitle').textContent = '智能助手首页';
@@ -819,10 +851,23 @@ function showPcChat(e, agent) {
   document.getElementById('pcZhaoshengPage').classList.remove('active');
   document.getElementById('pcYingxinPage').classList.remove('active');
   document.getElementById('pcBanxuePage').classList.remove('active');
+  document.getElementById('pcZhaoshengConsultPage').style.display = 'none';
   document.getElementById('pc' + agent.charAt(0).toUpperCase() + agent.slice(1) + 'Page').classList.add('active');
   document.querySelectorAll('.pc-nav-item').forEach(i => i.classList.remove('active'));
   document.getElementById('nav' + agent.charAt(0).toUpperCase() + agent.slice(1)).classList.add('active');
   document.getElementById('pcHeaderTitle').textContent = AGENT_CONFIG[agent].title;
+}
+
+function showPcConsult(e) {
+  if (e) e.preventDefault();
+  document.getElementById('pcHomePage').style.display = 'none';
+  document.getElementById('pcZhaoshengPage').classList.remove('active');
+  document.getElementById('pcYingxinPage').classList.remove('active');
+  document.getElementById('pcBanxuePage').classList.remove('active');
+  document.getElementById('pcZhaoshengConsultPage').style.display = 'flex';
+  document.querySelectorAll('.pc-nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('navZhaoshengConsult').classList.add('active');
+  document.getElementById('pcHeaderTitle').textContent = '招生咨询';
 }
 
 // ==================== 二级菜单 ====================
@@ -837,7 +882,11 @@ class QuickQuestionMenu {
       const mainBtn = document.createElement('button');
       mainBtn.className = 'pc-question-btn pc-q-main';
       mainBtn.textContent = item.name;
-      mainBtn.onclick = () => this.toggle(wrapper, item);
+      if (item.name === '招生咨询') {
+        mainBtn.onclick = () => showPcConsult();
+      } else {
+        mainBtn.onclick = () => this.toggle(wrapper, item);
+      }
       wrapper.appendChild(mainBtn);
       const subContainer = document.createElement('div');
       subContainer.className = 'pc-q-sub';
@@ -846,7 +895,11 @@ class QuickQuestionMenu {
           const subBtn = document.createElement('button');
           subBtn.className = 'pc-question-btn';
           subBtn.textContent = sub;
-          subBtn.onclick = (e) => { e.stopPropagation(); onSelect(sub); };
+          if (item.name === '招生咨询') {
+            subBtn.onclick = (e) => { e.stopPropagation(); showPcConsult(); };
+          } else {
+            subBtn.onclick = (e) => { e.stopPropagation(); onSelect(sub); };
+          }
           subContainer.appendChild(subBtn);
         });
       }
@@ -874,6 +927,7 @@ class QuickQuestionMenu {
 
 // 菜单数据
 const zhaoshengMenuData = [
+  { name: '招生咨询', subItems: ['招生咨询'] },
   { name: '学校基础信息', subItems: ['学校简介'] },
   { name: '招生计划与批次', subItems: ['招生计划', '招生章程'] },
   { name: '费用与资助', subItems: ['学费标准（分专业：师范/非师范/艺术）', '助学贷款与相关流程'] },
@@ -892,7 +946,7 @@ const yingxinMenuData = [
 
 const banxueMenuData = [
   { name: '校园服务与办事流程', subItems: ['校医院：地址、急诊电话', '相关部门办公电话', '选课说明', '学分情况说明'] },
-  { name: '奖助与成长信息', subItems: ['奖助学金：国家奖学金、励志奖学金、校级奖学金、助学金的申请条件、时间、流程', '社团介绍'] },
+  { name: '奖学金信息', subItems: ['奖学金：国家奖学金、励志奖学金、校级奖学金的申请条件、时间、流程'] },
   { name: '比赛与竞赛', subItems: ['比赛'] },
   { name: '机构设置', subItems: ['团委', '信息中心', '安全工作处', '纪检委'] }
 ];
@@ -1152,6 +1206,8 @@ function showMobileChat(agentKey) {
   document.getElementById('mobileHomePage').style.display = 'none';
   // 隐藏所有聊天页
   document.querySelectorAll('.chat-page').forEach(function(p) { p.classList.remove('active'); });
+  // 隐藏招生咨询页
+  document.getElementById('mobileConsultPage').style.display = 'none';
   // 显示对应聊天页
   if (agentKey === '招生小助手') {
     document.getElementById('mobileChatPage').classList.add('active');
@@ -1166,9 +1222,18 @@ function showMobileChat(agentKey) {
   window.scrollTo(0, 0);
 }
 
+function showMobileConsult() {
+  document.getElementById('mobileHomePage').style.display = 'none';
+  document.querySelectorAll('.chat-page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('mobileConsultPage').classList.add('active');
+  document.getElementById('mobileConsultPage').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
 function showMobileHome() {
   document.getElementById('mobileHomePage').style.display = 'block';
   document.querySelectorAll('.chat-page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('mobileConsultPage').style.display = 'none';
   window.scrollTo(0, 0);
 }
 
@@ -1180,7 +1245,8 @@ function renderMobileQa(containerId, menuData, agentKey) {
     // 主按钮（可折叠）
     var mainBtn = document.createElement('button');
     mainBtn.className = 'm-qa-btn';
-    mainBtn.innerHTML = '<span>' + item.name + '</span><span class="m-qa-arrow">▼</span>';
+    var isZSConsult = (item.name === '招生咨询');
+    mainBtn.innerHTML = '<span>' + item.name + '</span><span class="m-qa-arrow">' + (isZSConsult ? '→' : '▼') + '</span>';
     
     // 子容器
     var subDiv = document.createElement('div');
@@ -1190,11 +1256,18 @@ function renderMobileQa(containerId, menuData, agentKey) {
         var subBtn = document.createElement('button');
         subBtn.className = 'm-qa-sub-btn';
         subBtn.textContent = sub;
-        subBtn.onclick = function(e) { e.stopPropagation(); sendMobileQuickQuestion(agentKey, sub); };
+        if (isZSConsult) {
+          subBtn.onclick = function(e) { e.stopPropagation(); showMobileConsult(); };
+        } else {
+          subBtn.onclick = function(e) { e.stopPropagation(); sendMobileQuickQuestion(agentKey, sub); };
+        }
         subDiv.appendChild(subBtn);
       });
     }
-    // 点击主按钮展开/收起
+    // 点击主按钮展开/收起（招生咨询直接跳转）
+    if (isZSConsult) {
+      mainBtn.onclick = function() { showMobileConsult(); };
+    } else {
     mainBtn.onclick = function() {
       var isExp = mainBtn.classList.contains('expanded');
       // 收起所有同级按钮
@@ -1205,6 +1278,7 @@ function renderMobileQa(containerId, menuData, agentKey) {
         subDiv.classList.add('show');
       }
     };
+    }
 
     container.appendChild(mainBtn);
     container.appendChild(subDiv);
@@ -1335,6 +1409,331 @@ document.addEventListener('click', function(e) {
     window.open(e.target.src, '_blank');
   }
 });
+</script>
+
+<!-- ===== 招生咨询React组件 ===== -->
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+// SVG Icons
+const Icons = {
+  GraduationCap: ({size=24}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 1 0 12 0v-3.5"/></svg>,
+  Search: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+  Zap: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  Target: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+  ShieldCheck: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.06 1.06 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>,
+  MapPin: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Hash: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>,
+  BarChart3: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" x2="3" y1="3" y2="21"/><path d="M3 13h4"/><path d="M11 7h4"/><path d="M19 11h4"/></svg>,
+  TrendingUp: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+  TrendingDown: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>,
+  Minus: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>,
+  Building2: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>,
+  Check: ({size=14}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+};
+
+const majorsData = [{"id":"lishi-新闻学","name":"新闻学","category":"文科","college":"文学与传媒学院","degree":"文学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":531,"minRank":31846,"avgScore":535,"enrollmentCount":26},{"year":2024,"minScore":502,"minRank":32935,"avgScore":506,"enrollmentCount":30},{"year":2023,"minScore":490,"minRank":33572,"avgScore":494,"enrollmentCount":45}]},{"id":"lishi-人力资源管理","name":"人力资源管理","category":"文科","college":"经济管理学院","degree":"管理学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":528,"minRank":33434,"avgScore":532,"enrollmentCount":35},{"year":2024,"minScore":509,"minRank":34889,"avgScore":513,"enrollmentCount":35},{"year":2023,"minScore":493,"minRank":33728,"avgScore":497,"enrollmentCount":45}]},{"id":"lishi-民族学","name":"民族学","category":"文科","college":"历史文化学院","degree":"法学/历史学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":524,"minRank":35601,"avgScore":528,"enrollmentCount":17},{"year":2024,"minScore":500,"minRank":37424,"avgScore":504,"enrollmentCount":15},{"year":2023,"minScore":480,"minRank":38784,"avgScore":484,"enrollmentCount":15}]},{"id":"lishi-文化产业管理","name":"文化产业管理","category":"文科","college":"历史文化学院","degree":"管理学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":523,"minRank":36127,"avgScore":527,"enrollmentCount":20},{"year":2024,"minScore":498,"minRank":38404,"avgScore":502,"enrollmentCount":20},{"year":2023,"minScore":477,"minRank":40506,"avgScore":481,"enrollmentCount":20}]},{"id":"lishi-翻译_英语_","name":"翻译（英语）","category":"文科","college":"外国语学院","degree":"文学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":523,"minRank":36127,"avgScore":527,"enrollmentCount":20},{"year":2024,"minScore":498,"minRank":38404,"avgScore":502,"enrollmentCount":20},{"year":2023,"minScore":477,"minRank":40506,"avgScore":481,"enrollmentCount":25}]},{"id":"lishi-学前教育","name":"学前教育","category":"文科","college":"教师教育学院","degree":"教育学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":522,"minRank":36664,"avgScore":526,"enrollmentCount":20},{"year":2024,"minScore":498,"minRank":38404,"avgScore":502,"enrollmentCount":35},{"year":2023,"minScore":480,"minRank":38784,"avgScore":484,"enrollmentCount":35}]},{"id":"lishi-电子商务","name":"电子商务","category":"文科","college":"经济管理学院","degree":"管理学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":522,"minRank":36684,"avgScore":526,"enrollmentCount":26},{"year":2024,"minScore":496,"minRank":39932,"avgScore":500,"enrollmentCount":30},{"year":2023,"minScore":476,"minRank":41083,"avgScore":480,"enrollmentCount":25}]},{"id":"lishi-旅游管理","name":"旅游管理","category":"文科","college":"旅游与航空服务学院","degree":"管理学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":520,"minRank":37811,"avgScore":524,"enrollmentCount":35},{"year":2024,"minScore":494,"minRank":40437,"avgScore":498,"enrollmentCount":25},{"year":2023,"minScore":472,"minRank":43345,"avgScore":476,"enrollmentCount":25}]},{"id":"lishi-财务管理_AISEC_","name":"财务管理（AISEC）","category":"文科","college":"经济管理学院","degree":"管理学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":510,"minRank":43673,"avgScore":514,"enrollmentCount":30},{"year":2024,"minScore":444,"minRank":69063,"avgScore":448,"enrollmentCount":30},{"year":2023,"minScore":476,"minRank":41083,"avgScore":480,"enrollmentCount":35}]},{"id":"wuli-化学_优师专项_","name":"化学（优师专项）","category":"理科","college":"化学与化工学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":562,"minRank":65166,"avgScore":566,"enrollmentCount":40},{"year":2024,"minScore":534,"minRank":74627,"avgScore":538,"enrollmentCount":32},{"year":2023,"minScore":525,"minRank":71670,"avgScore":529,"enrollmentCount":23}]},{"id":"wuli-数学与应用数学_优师专项_","name":"数学与应用数学（优师专项）","category":"理科","college":"数学与计算机科学学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":561,"minRank":66470,"avgScore":565,"enrollmentCount":52},{"year":2024,"minScore":532,"minRank":77131,"avgScore":536,"enrollmentCount":50},{"year":2023,"minScore":513,"minRank":84913,"avgScore":517,"enrollmentCount":40}]},{"id":"wuli-物理学_优师专项_","name":"物理学（优师专项）","category":"理科","college":"物理与电子工程学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":559,"minRank":68977,"avgScore":563,"enrollmentCount":52},{"year":2024,"minScore":531,"minRank":78429,"avgScore":535,"enrollmentCount":50},{"year":2023,"minScore":512,"minRank":88019,"avgScore":516,"enrollmentCount":47}]},{"id":"wuli-小学教育_优师专项_","name":"小学教育（优师专项）","category":"理科","college":"教师教育学院","degree":"教育学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":559,"minRank":68977,"avgScore":563,"enrollmentCount":34},{"year":2024,"minScore":536,"minRank":72204,"avgScore":540,"enrollmentCount":33},{"year":2023,"minScore":507,"minRank":91868,"avgScore":511,"enrollmentCount":50}]},{"id":"wuli-汉语言文学_普通非公费_","name":"汉语言文学（普通非公费）","category":"理科","college":"文学与传媒学院","degree":"文学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":555,"minRank":74291,"avgScore":559,"enrollmentCount":5},{"year":2024,"minScore":543,"minRank":63909,"avgScore":547,"enrollmentCount":5},{"year":2023,"minScore":532,"minRank":64617,"avgScore":536,"enrollmentCount":10}]},{"id":"wuli-经济与金融","name":"经济与金融","category":"理科","college":"经济管理学院","degree":"经济学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":555,"minRank":103048,"avgScore":559,"enrollmentCount":20},{"year":2024,"minScore":506,"minRank":113442,"avgScore":510,"enrollmentCount":17},{"year":2023,"minScore":494,"minRank":107897,"avgScore":498,"enrollmentCount":19}]},{"id":"wuli-英语","name":"英语","category":"理科","college":"外国语学院","degree":"文学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":533,"minRank":106095,"avgScore":537,"enrollmentCount":20},{"year":2024,"minScore":523,"minRank":88967,"avgScore":527,"enrollmentCount":20},{"year":2023,"minScore":514,"minRank":83739,"avgScore":518,"enrollmentCount":20}]},{"id":"wuli-计算机科学与技术","name":"计算机科学与技术","category":"理科","college":"数学与计算机科学学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":532,"minRank":107712,"avgScore":536,"enrollmentCount":45},{"year":2024,"minScore":512,"minRank":104398,"avgScore":516,"enrollmentCount":30},{"year":2023,"minScore":500,"minRank":100365,"avgScore":504,"enrollmentCount":30}]},{"id":"wuli-数学与应用数学_普通非公费_","name":"数学与应用数学（普通非公费）","category":"理科","college":"数学与计算机科学学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":530,"minRank":110872,"avgScore":534,"enrollmentCount":12},{"year":2024,"minScore":514,"minRank":101439,"avgScore":518,"enrollmentCount":20},{"year":2023,"minScore":505,"minRank":94257,"avgScore":509,"enrollmentCount":25}]},{"id":"wuli-小学教育_普通非公费_","name":"小学教育（普通非公费）","category":"理科","college":"教师教育学院","degree":"教育学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":529,"minRank":112447,"avgScore":533,"enrollmentCount":10},{"year":2024,"minScore":516,"minRank":98429,"avgScore":520,"enrollmentCount":10},{"year":2023,"minScore":504,"minRank":95445,"avgScore":508,"enrollmentCount":20}]},{"id":"wuli-地理科学","name":"地理科学","category":"理科","college":"资源与环境科学学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["地理"],"history":[{"year":2025,"minScore":527,"minRank":115590,"avgScore":531,"enrollmentCount":10},{"year":2024,"minScore":513,"minRank":102925,"avgScore":517,"enrollmentCount":5},{"year":2023,"minScore":504,"minRank":95445,"avgScore":508,"enrollmentCount":5}]},{"id":"wuli-新闻学","name":"新闻学","category":"理科","college":"文学与传媒学院","degree":"文学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":522,"minRank":123271,"avgScore":526,"enrollmentCount":5},{"year":2024,"minScore":507,"minRank":111854,"avgScore":511,"enrollmentCount":5},{"year":2023,"minScore":498,"minRank":102809,"avgScore":502,"enrollmentCount":5}]},{"id":"wuli-物理学_普通非公费_","name":"物理学（普通非公费）","category":"理科","college":"物理与电子工程学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":519,"minRank":126315,"avgScore":523,"enrollmentCount":18},{"year":2024,"minScore":502,"minRank":119489,"avgScore":506,"enrollmentCount":20},{"year":2023,"minScore":494,"minRank":107897,"avgScore":498,"enrollmentCount":23}]},{"id":"wuli-化学_普通非公费_","name":"化学（普通非公费）","category":"理科","college":"化学与化工学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":518,"minRank":130251,"avgScore":522,"enrollmentCount":28},{"year":2024,"minScore":502,"minRank":119549,"avgScore":506,"enrollmentCount":28},{"year":2023,"minScore":492,"minRank":110450,"avgScore":496,"enrollmentCount":37}]},{"id":"wuli-翻译_英语_","name":"翻译（英语）","category":"理科","college":"外国语学院","degree":"文学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":517,"minRank":131912,"avgScore":521,"enrollmentCount":5},{"year":2024,"minScore":503,"minRank":117920,"avgScore":507,"enrollmentCount":5},{"year":2023,"minScore":495,"minRank":106586,"avgScore":499,"enrollmentCount":5}]},{"id":"wuli-人力资源管理","name":"人力资源管理","category":"理科","college":"经济管理学院","degree":"管理学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":516,"minRank":133592,"avgScore":520,"enrollmentCount":15},{"year":2024,"minScore":499,"minRank":124755,"avgScore":503,"enrollmentCount":20},{"year":2023,"minScore":489,"minRank":114336,"avgScore":493,"enrollmentCount":20}]},{"id":"wuli-储能科学与工程","name":"储能科学与工程","category":"理科","college":"物理与电子工程学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":513,"minRank":138502,"avgScore":517,"enrollmentCount":40},{"year":2024,"minScore":492,"minRank":135417,"avgScore":496,"enrollmentCount":40},{"year":2023,"minScore":476,"minRank":135123,"avgScore":480,"enrollmentCount":40}]},{"id":"wuli-学前教育","name":"学前教育","category":"理科","college":"教师教育学院","degree":"教育学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":511,"minRank":142016,"avgScore":515,"enrollmentCount":10},{"year":2024,"minScore":499,"minRank":124275,"avgScore":503,"enrollmentCount":15},{"year":2023,"minScore":491,"minRank":111822,"avgScore":495,"enrollmentCount":15}]},{"id":"wuli-生物科学","name":"生物科学","category":"理科","college":"生物与食品科学学院","degree":"理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":511,"minRank":142016,"avgScore":515,"enrollmentCount":50},{"year":2024,"minScore":498,"minRank":125913,"avgScore":502,"enrollmentCount":50},{"year":2023,"minScore":491,"minRank":111822,"avgScore":495,"enrollmentCount":50}]},{"id":"wuli-数据科学与大数据技术","name":"数据科学与大数据技术","category":"理科","college":"数学与计算机科学学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":510,"minRank":143731,"avgScore":514,"enrollmentCount":20},{"year":2024,"minScore":492,"minRank":135417,"avgScore":496,"enrollmentCount":20},{"year":2023,"minScore":483,"minRank":122119,"avgScore":487,"enrollmentCount":100}]},{"id":"wuli-电子商务","name":"电子商务","category":"理科","college":"经济管理学院","degree":"管理学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":509,"minRank":145551,"avgScore":513,"enrollmentCount":16},{"year":2024,"minScore":492,"minRank":135417,"avgScore":496,"enrollmentCount":20},{"year":2023,"minScore":483,"minRank":122119,"avgScore":487,"enrollmentCount":25}]},{"id":"wuli-科学教育","name":"科学教育","category":"理科","college":"教师教育学院","degree":"教育学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":508,"minRank":147056,"avgScore":512,"enrollmentCount":50},{"year":2024,"minScore":493,"minRank":133743,"avgScore":497,"enrollmentCount":60},{"year":2023,"minScore":483,"minRank":122119,"avgScore":487,"enrollmentCount":60}]},{"id":"wuli-文化产业管理","name":"文化产业管理","category":"理科","college":"历史文化学院","degree":"管理学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":508,"minRank":147056,"avgScore":512,"enrollmentCount":5},{"year":2024,"minScore":492,"minRank":135417,"avgScore":496,"enrollmentCount":5},{"year":2023,"minScore":483,"minRank":122119,"avgScore":487,"enrollmentCount":5}]},{"id":"wuli-人工智能","name":"人工智能","category":"理科","college":"数学与计算机科学学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":508,"minRank":147056,"avgScore":512,"enrollmentCount":150},{"year":2024,"minScore":490,"minRank":138648,"avgScore":494,"enrollmentCount":150},{"year":2023,"minScore":479,"minRank":127535,"avgScore":483,"enrollmentCount":100}]},{"id":"wuli-生物工程","name":"生物工程","category":"理科","college":"生物与食品科学学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":507,"minRank":148725,"avgScore":511,"enrollmentCount":30},{"year":2024,"minScore":490,"minRank":138648,"avgScore":494,"enrollmentCount":30},{"year":2023,"minScore":478,"minRank":128857,"avgScore":482,"enrollmentCount":30}]},{"id":"wuli-食品质量与安全","name":"食品质量与安全","category":"理科","college":"生物与食品科学学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":507,"minRank":148725,"avgScore":511,"enrollmentCount":40},{"year":2024,"minScore":490,"minRank":138648,"avgScore":494,"enrollmentCount":40},{"year":2023,"minScore":478,"minRank":128857,"avgScore":482,"enrollmentCount":35}]},{"id":"wuli-财务管理_AISEC_","name":"财务管理（AISEC）","category":"理科","college":"经济管理学院","degree":"管理学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":506,"minRank":150409,"avgScore":510,"enrollmentCount":30},{"year":2024,"minScore":489,"minRank":140239,"avgScore":493,"enrollmentCount":31},{"year":2023,"minScore":483,"minRank":122119,"avgScore":487,"enrollmentCount":31}]},{"id":"wuli-旅游管理","name":"旅游管理","category":"理科","college":"旅游与航空服务学院","degree":"管理学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":506,"minRank":150409,"avgScore":510,"enrollmentCount":5},{"year":2024,"minScore":491,"minRank":136994,"avgScore":495,"enrollmentCount":5},{"year":2023,"minScore":481,"minRank":124810,"avgScore":485,"enrollmentCount":5}]},{"id":"wuli-环境生态工程","name":"环境生态工程","category":"理科","college":"资源与环境科学学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":502,"minRank":157169,"avgScore":506,"enrollmentCount":50},{"year":2024,"minScore":484,"minRank":148325,"avgScore":488,"enrollmentCount":45},{"year":2023,"minScore":473,"minRank":135582,"avgScore":477,"enrollmentCount":45}]},{"id":"wuli-新能源科学工程_AISEC_","name":"新能源科学工程（AISEC）","category":"理科","college":"物理与电子工程学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":492,"minRank":173209,"avgScore":496,"enrollmentCount":70},{"year":2024,"minScore":472,"minRank":168027,"avgScore":476,"enrollmentCount":70},{"year":2023,"minScore":456,"minRank":159494,"avgScore":460,"enrollmentCount":70}]},{"id":"wuli-化学工程与工艺_AISEC_","name":"化学工程与工艺（AISEC）","category":"理科","college":"化学与化工学院","degree":"工学学士","duration":"四年","preferredSubject":"物理","electiveSubjects":["化学"],"history":[{"year":2025,"minScore":485,"minRank":181532,"avgScore":489,"enrollmentCount":70},{"year":2024,"minScore":465,"minRank":179731,"avgScore":469,"enrollmentCount":70},{"year":2023,"minScore":450,"minRank":167931,"avgScore":454,"enrollmentCount":70}]},{"id":"yishu-航空服务艺术与管理","name":"航空服务艺术与管理","category":"综合","college":"美术与设计学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":455.8,"minRank":1468,"avgScore":459.8,"enrollmentCount":297},{"year":2024,"minScore":424,"minRank":1349,"avgScore":428,"enrollmentCount":300},{"year":2023,"minScore":367,"minRank":8050,"avgScore":371,"enrollmentCount":300}]},{"id":"yishu-环境设计","name":"环境设计","category":"综合","college":"美术与设计学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":489.5,"minRank":7340,"avgScore":493.5,"enrollmentCount":19},{"year":2024,"minScore":493,"minRank":7750,"avgScore":497,"enrollmentCount":25},{"year":2023,"minScore":529,"minRank":7762,"avgScore":533,"enrollmentCount":25}]},{"id":"yishu-美术学__师范_","name":"美术学 (师范)","category":"综合","college":"美术与设计学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":491,"minRank":7048,"avgScore":495,"enrollmentCount":27},{"year":2024,"minScore":494,"minRank":7253,"avgScore":498,"enrollmentCount":35},{"year":2023,"minScore":531,"minRank":7610,"avgScore":535,"enrollmentCount":35}]},{"id":"yishu-视觉传达设计","name":"视觉传达设计","category":"综合","college":"美术与设计学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":494.2,"minRank":6465,"avgScore":498.2,"enrollmentCount":19},{"year":2024,"minScore":496,"minRank":7253,"avgScore":500,"enrollmentCount":25},{"year":2023,"minScore":531,"minRank":7610,"avgScore":535,"enrollmentCount":25}]},{"id":"yishu-书法学","name":"书法学","category":"综合","college":"美术与设计学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":532,"minRank":262,"avgScore":536,"enrollmentCount":25},{"year":2024,"minScore":527,"minRank":254,"avgScore":531,"enrollmentCount":25},{"year":2023,"minScore":565,"minRank":226,"avgScore":569,"enrollmentCount":15}]},{"id":"yishu-播音与主持艺术","name":"播音与主持艺术","category":"综合","college":"音乐舞蹈学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":506.1,"minRank":685,"avgScore":510.1,"enrollmentCount":40},{"year":2024,"minScore":487,"minRank":740,"avgScore":491,"enrollmentCount":40},{"year":2023,"minScore":483,"minRank":582,"avgScore":487,"enrollmentCount":40}]},{"id":"yishu-舞蹈学_非师范_","name":"舞蹈学（非师范）","category":"综合","college":"音乐舞蹈学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":465.3,"minRank":1778,"avgScore":469.3,"enrollmentCount":80},{"year":2024,"minScore":452,"minRank":833,"avgScore":456,"enrollmentCount":80},{"year":2023,"minScore":494,"minRank":1769,"avgScore":498,"enrollmentCount":80}]},{"id":"yishu-音乐学__师范，器乐_","name":"音乐学 (师范，器乐)","category":"综合","college":"音乐舞蹈学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":445.7,"minRank":1154,"avgScore":449.7,"enrollmentCount":25},{"year":2024,"minScore":445,"minRank":999,"avgScore":449,"enrollmentCount":25},{"year":2023,"minScore":490,"minRank":1302,"avgScore":494,"enrollmentCount":15}]},{"id":"yishu-音乐学__师范，声乐_","name":"音乐学 (师范，声乐)","category":"综合","college":"音乐舞蹈学院","degree":"艺术学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":445.7,"minRank":925,"avgScore":449.7,"enrollmentCount":35},{"year":2024,"minScore":449,"minRank":838,"avgScore":453,"enrollmentCount":35},{"year":2023,"minScore":503,"minRank":1411,"avgScore":507,"enrollmentCount":45}]},{"id":"tiyu_lishi-社会体育指导与管理","name":"社会体育指导与管理","category":"综合","college":"体育学院","degree":"教育学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":555.9,"minRank":2230,"avgScore":559.9,"enrollmentCount":60},{"year":2024,"minScore":543,"minRank":2035,"avgScore":547,"enrollmentCount":60},{"year":2023,"minScore":528,"minRank":1815,"avgScore":532,"enrollmentCount":60}]},{"id":"tiyu_lishi-体育教育_师范_","name":"体育教育（师范）","category":"综合","college":"体育学院","degree":"教育学学士","duration":"四年","preferredSubject":"历史","history":[{"year":2025,"minScore":569.3,"minRank":1539,"avgScore":573.3,"enrollmentCount":70},{"year":2024,"minScore":554,"minRank":1506,"avgScore":558,"enrollmentCount":70},{"year":2023,"minScore":538,"minRank":1401,"avgScore":542,"enrollmentCount":70}]},{"id":"tiyu_wuli-社会体育指导与管理","name":"社会体育指导与管理","category":"综合","college":"体育学院","degree":"教育学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":538.6,"minRank":1395,"avgScore":542.6,"enrollmentCount":20},{"year":2024,"minScore":536,"minRank":1444,"avgScore":540,"enrollmentCount":20},{"year":2023,"minScore":539,"minRank":1390,"avgScore":543,"enrollmentCount":20}]},{"id":"tiyu_wuli-体育教育_师范_","name":"体育教育（师范）","category":"综合","college":"体育学院","degree":"教育学学士","duration":"四年","preferredSubject":"物理","history":[{"year":2025,"minScore":555.9,"minRank":935,"avgScore":559.9,"enrollmentCount":20},{"year":2024,"minScore":553,"minRank":900,"avgScore":557,"enrollmentCount":20},{"year":2023,"minScore":554,"minRank":901,"avgScore":558,"enrollmentCount":20}]}];
+
+const PREFERRED_SUBJECTS = ["物理", "历史"];
+const ELECTIVE_SUBJECTS = ["化学", "生物", "地理", "思想政治"];
+
+function matchesSubjects(userPreferred, userElectives, majorPreferred, majorElectives) {
+  if (majorPreferred && userPreferred !== majorPreferred) return false;
+  if (majorElectives && majorElectives.length > 0 && userElectives.length === 0) return false;
+  if (majorElectives && majorElectives.length > 0) {
+    const hasMatch = majorElectives.some(e => userElectives.includes(e));
+    if (!hasMatch) return false;
+  }
+  return true;
+}
+
+function useAdmissionRecommend(input) {
+  return useMemo(() => {
+    if (!input) return { results: [], summary: null };
+    const { category, preferredSubject, electiveSubjects } = input;
+    const filteredMajors = majorsData.filter(m => {
+      if (m.category !== '综合' && m.category !== category) return false;
+      if (m.category !== '综合' && preferredSubject) {
+        if (!matchesSubjects(preferredSubject, electiveSubjects, m.preferredSubject, m.electiveSubjects)) return false;
+      }
+      return true;
+    });
+    const results = filteredMajors.map(major => {
+      const latestYear = major.history[0];
+      const prevYear = major.history[1];
+      const scoreDiff = input.score - latestYear.minScore;
+      let trend = '稳定';
+      if (prevYear) {
+        const trendDiff = latestYear.minScore - prevYear.minScore;
+        if (trendDiff > 5) trend = '上升';
+        else if (trendDiff < -5) trend = '下降';
+      }
+      let matchLevel, matchScore;
+      if (scoreDiff < 0) { matchLevel = '冲刺'; matchScore = Math.max(5, 50 + scoreDiff); }
+      else if (scoreDiff <= 20) { matchLevel = '稳妥'; matchScore = 60 + (scoreDiff / 20) * 25; }
+      else { matchLevel = '保底'; matchScore = 80 + Math.min(19, (scoreDiff - 20) / 5); }
+      matchScore = Math.max(5, Math.min(99, Math.round(matchScore)));
+      return { major, matchLevel, matchScore, latestYear, trend };
+    });
+    const levelOrder = { '冲刺': 0, '稳妥': 1, '保底': 2 };
+    results.sort((a, b) => {
+      if (a.matchLevel !== b.matchLevel) return levelOrder[a.matchLevel] - levelOrder[b.matchLevel];
+      return b.matchScore - a.matchScore;
+    });
+    const sprintCount = results.filter(r => r.matchLevel === '冲刺').length;
+    const stableCount = results.filter(r => r.matchLevel === '稳妥').length;
+    const safeCount = results.filter(r => r.matchLevel === '保底').length;
+    return { results, summary: { sprintCount, stableCount, safeCount } };
+  }, [input]);
+}
+
+function SubjectButton({ label, selected, onClick, disabled }) {
+  return (
+    <button type="button" disabled={disabled} onClick={onClick}
+      className={"relative flex-1 min-w-[65px] py-2 px-2.5 rounded-xl border-2 text-center font-medium text-xs sm:text-sm transition-all duration-200 " +
+        (selected ? 'border-primary bg-blue-50 text-primary shadow-sm' :
+         disabled ? 'border-gray-100 bg-gray-50/50 text-gray-300 cursor-not-allowed' :
+         'border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:bg-blue-50/50')}>
+      {label}
+      {selected && <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-tl-lg rounded-br-xl bg-primary flex items-center justify-center"><Icons.Check size={10} color="#fff"/></span>}
+    </button>
+  );
+}
+
+function SummaryCard({ count, label, sublabel, color, icon, onClick, active }) {
+  const bgMap = { amber: 'bg-amber-50', blue: 'bg-blue-50', emerald: 'bg-emerald-50' };
+  const borderMap = { amber: 'border-amber-200', blue: 'border-blue-200', emerald: 'border-emerald-200' };
+  const ringMap = { amber: 'ring-amber-300', blue: 'ring-blue-300', emerald: 'ring-emerald-300' };
+  return (
+    <div onClick={onClick}
+      className={"card cursor-pointer transition-all hover:shadow-md p-3 flex items-center justify-between " +
+        bgMap[color] + " " + borderMap[color] + (active ? " ring-2 " + ringMap[color] : "")}>
+      <div>
+        <p className={"text-xs font-medium " + (color==='amber'?'text-amber-700':color==='blue'?'text-blue-700':'text-emerald-700')}>{label}</p>
+        <p className={"text-xl font-bold " + (color==='amber'?'text-amber-800':color==='blue'?'text-blue-800':'text-emerald-800')}>{count}</p>
+        <p className={"text-[10px] mt-0.5 " + (color==='amber'?'text-amber-600':color==='blue'?'text-blue-600':'text-emerald-600')}>{sublabel}</p>
+      </div>
+      <div className={"w-8 h-8 rounded-full flex items-center justify-center " + (color==='amber'?'bg-amber-100 text-amber-600':color==='blue'?'bg-blue-100 text-blue-600':'bg-emerald-100 text-emerald-600')}>
+        {icon}
+      </div>
+    </div>
+  );
+}
+
+function MatchBadge({ level }) {
+  const config = {
+    '冲刺': { bg: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Icons.Zap size={12}/> },
+    '稳妥': { bg: 'bg-blue-100 text-blue-700 border-blue-300', icon: <Icons.Target size={12}/> },
+    '保底': { bg: 'bg-emerald-100 text-emerald-700 border-emerald-300', icon: <Icons.ShieldCheck size={12}/> },
+  };
+  const c = config[level];
+  return <span className={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border " + c.bg}>{c.icon}{level}</span>;
+}
+
+function TrendIcon({ trend }) {
+  switch (trend) {
+    case '上升': return <span className="inline-flex items-center gap-0.5 text-red-500 text-xs"><Icons.TrendingUp size={14}/>上升</span>;
+    case '下降': return <span className="inline-flex items-center gap-0.5 text-emerald-500 text-xs"><Icons.TrendingDown size={14}/>下降</span>;
+    default: return <span className="inline-flex items-center gap-0.5 text-gray-400 text-xs"><Icons.Minus size={14}/>稳定</span>;
+  }
+}
+
+function MajorCard({ item, score }) {
+  const m = item.major;
+  const userScore = Number(score);
+  return (
+    <div className="card card-hover p-4 transition-all duration-300 group">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+            <MatchBadge level={item.matchLevel} />
+            <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-100 rounded-full">{m.college}</span>
+            {m.electiveSubjects && m.electiveSubjects.length > 0 && (
+              <span className="text-[10px] text-gray-500 px-1.5 py-0.5 border border-gray-200 rounded-full">要求{m.electiveSubjects.join('/')}</span>
+            )}
+          </div>
+          <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors">{m.name}</h3>
+          <p className="text-[10px] text-gray-500 mt-0.5">{m.degree} · {m.duration}</p>
+        </div>
+        <div className="flex flex-col items-end shrink-0">
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-gray-500">匹配度</span>
+            <span className="text-base font-bold text-primary">{item.matchScore}%</span>
+          </div>
+          <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1">
+            <div className={"h-full rounded-full transition-all " + (item.matchLevel==='冲刺'?'bg-amber-400':item.matchLevel==='稳妥'?'bg-blue-500':'bg-emerald-500')}
+              style={{width: item.matchScore+'%'}}/>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 mb-2">
+        {[
+          {label:'2025最低分', val:item.latestYear.minScore, unit:'分'},
+          {label:'2025最低排名', val:item.latestYear.minRank.toLocaleString(), unit:'名'},
+          {label:'招生人数', val:item.latestYear.enrollmentCount, unit:'人'},
+        ].map((s,i)=>
+          <div key={i} className="bg-blue-50/60 rounded-lg p-1.5 text-center">
+            <p className="text-[9px] text-gray-500 mb-0.5">{s.label}</p>
+            <p className="text-sm font-bold text-primary">{s.val}<span className="text-[9px] font-normal ml-0.5">{s.unit}</span></p>
+          </div>
+        )}
+      </div>
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] text-gray-500">近年分数线走势</span>
+          <TrendIcon trend={item.trend} />
+        </div>
+        <div className="flex items-end gap-1 h-10">
+          {[...m.history].reverse().map(h => {
+            const allScores = m.history.map(x=>x.minScore);
+            const minS = Math.min(...allScores), maxS = Math.max(...allScores);
+            const range = maxS - minS || 1;
+            const pct = ((h.minScore - minS) / range) * 70 + 15;
+            const isAbove = userScore >= h.minScore;
+            return (
+              <div key={h.year} className="flex-1 flex flex-col items-center gap-0.5">
+                <span className={"text-[9px] font-medium "+(isAbove?'text-emerald-600':'text-amber-600')}>{h.minScore}</span>
+                <div className={"w-full rounded-t-sm "+(isAbove?'bg-emerald-400/60':'bg-amber-400/60')} style={{height:pct+'%', minHeight:4}}/>
+                <span className="text-[8px] text-gray-400">{h.year}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [score, setScore] = useState('');
+  const [rank, setRank] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [preferredSubject, setPreferredSubject] = useState('物理');
+  const [electiveSubjects, setElectiveSubjects] = useState([]);
+
+  const handlePreferredSelect = (s) => { setPreferredSubject(s); setElectiveSubjects([]); };
+  const handleElectiveToggle = (s) => {
+    if (electiveSubjects.includes(s)) setElectiveSubjects(prev => prev.filter(x => x !== s));
+    else if (electiveSubjects.length < 2) setElectiveSubjects(prev => [...prev, s]);
+  };
+
+  const derivedCategory = preferredSubject === '物理' ? '理科' : '文科';
+  const userInput = score && rank && preferredSubject ? {
+    score: Number(score), rank: Number(rank), category: derivedCategory,
+    province: '河北省', preferredSubject, electiveSubjects,
+  } : null;
+
+  const { results, summary } = useAdmissionRecommend(userInput);
+  const filteredResults = activeTab === 'all' ? results : results.filter(r => r.matchLevel === activeTab);
+
+  return (
+    <div>
+      {/* Input Card */}
+      <div className="card p-4 mb-4 border-blue-100 shadow-lg shadow-blue-100/40">
+        <div className="flex items-center gap-2 mb-3">
+          <Icons.Search size={18} className="text-primary"/>
+          <h2 className="text-base font-bold text-gray-800">输入你的高考信息</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-3">
+          <div>
+            <label className="flex items-center gap-1 text-[11px] font-medium text-gray-600 mb-1"><Icons.MapPin size={12} className="text-primary"/>生源省份</label>
+            <select className="w-full h-9 px-2.5 border border-gray-200 rounded-lg text-xs bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+              <option>河北省</option>
+            </select>
+          </div>
+          <div>
+            <label className="flex items-center gap-1 text-[11px] font-medium text-gray-600 mb-1"><Icons.Hash size={12} className="text-primary"/>高考分数</label>
+            <input type="number" placeholder="请输入高考分数" value={score} onChange={e=>setScore(e.target.value)}
+              className="w-full h-9 px-2.5 border border-gray-200 rounded-lg text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+          </div>
+          <div>
+            <label className="flex items-center gap-1 text-[11px] font-medium text-gray-600 mb-1"><Icons.Hash size={12} className="text-primary"/>全省排名</label>
+            <input type="number" placeholder="请输入全省排名" value={rank} onChange={e=>setRank(e.target.value)}
+              className="w-full h-9 px-2.5 border border-gray-200 rounded-lg text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none"/>
+          </div>
+        </div>
+        <div className="pt-2.5 border-t border-dashed border-blue-100 space-y-2">
+          <p className="text-xs font-semibold text-gray-700 flex items-center gap-1"><Icons.BarChart3 size={14} className="text-primary"/>请选择考试科目</p>
+          <div>
+            <p className="text-[10px] text-gray-500 mb-1 font-medium">首选1个科目</p>
+            <div className="flex gap-2">
+              {PREFERRED_SUBJECTS.map(s =>
+                <SubjectButton key={s} label={s} selected={preferredSubject===s} onClick={()=>handlePreferredSelect(s)}/>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-500 mb-1 font-medium">再选2个科目（可选）</p>
+            <div className="flex gap-1.5 flex-wrap">
+              {ELECTIVE_SUBJECTS.map(s => {
+                const sel = electiveSubjects.includes(s);
+                return <SubjectButton key={s} label={s} selected={sel} disabled={!sel && electiveSubjects.length>=2} onClick={()=>handleElectiveToggle(s)}/>;
+              })}
+            </div>
+          </div>
+        </div>
+        <button disabled={!score || !rank || !preferredSubject}
+          onClick={() => setActiveTab('all')}
+          className="mt-4 w-full sm:w-auto px-6 py-2 bg-accent hover:bg-orange-600 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-1.5 text-xs">
+          <Icons.Search size={14}/>开始智能匹配
+        </button>
+      </div>
+
+      {/* Results */}
+      {summary && results.length > 0 && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <SummaryCard count={summary.sprintCount} label="冲刺专业" sublabel="需要努力争取" color="amber"
+              icon={<Icons.Zap size={18}/>} onClick={()=>setActiveTab('冲刺')} active={activeTab==='冲刺'}/>
+            <SummaryCard count={summary.stableCount} label="稳妥专业" sublabel="录取概率较大" color="blue"
+              icon={<Icons.Target size={18}/>} onClick={()=>setActiveTab('稳妥')} active={activeTab==='稳妥'}/>
+            <SummaryCard count={summary.safeCount} label="保底专业" sublabel="录取把握很大" color="emerald"
+              icon={<Icons.ShieldCheck size={18}/>} onClick={()=>setActiveTab('保底')} active={activeTab==='保底'}/>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex bg-blue-50/80 rounded-lg p-0.5 gap-0.5">
+              {['all','冲刺','稳妥','保底'].map(t => {
+                const cnt = t==='all' ? results.length : t==='冲刺'?summary.sprintCount:t==='稳妥'?summary.stableCount:summary.safeCount;
+                return (
+                  <button key={t} onClick={()=>setActiveTab(t)}
+                    className={"px-2.5 py-1 rounded-md text-xs font-medium transition-all " + (activeTab===t ? (t==='冲刺'?'bg-amber-50 text-amber-700':t==='稳妥'?'bg-blue-50 text-blue-700':t==='保底'?'bg-emerald-50 text-emerald-700':'bg-white text-primary') : 'text-gray-500')}>
+                    {t==='all'?'全部':t} ({cnt})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+            {filteredResults.map(item => <MajorCard key={item.major.id} item={item} score={score}/>)}
+          </div>
+          {filteredResults.length === 0 && (
+            <div className="card border-dashed border-gray-200 bg-gray-50/50 px-8 py-8 text-center text-xs text-gray-500">
+              该分类下暂无可推荐专业，试试调整选科组合
+            </div>
+          )}
+        </div>
+      )}
+
+      {!summary && (
+        <div className="text-center py-8">
+          <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-3"><Icons.GraduationCap size={28} className="text-primary"/></div>
+          <h3 className="text-base font-bold text-gray-800 mb-1.5">请输入你的高考信息</h3>
+          <p className="text-xs text-gray-500 max-w-md mx-auto">输入高考分数和全省排名，选择新高考选科科目，系统将智能推荐河北民族师范学院最适合报考的专业。</p>
+        </div>
+      )}
+      <div className="mt-6 text-center">
+        <p className="text-[10px] text-gray-500">数据来源于河北省教育考试院历年公布数据，仅供参考。实际录取以当年招生计划和投档情况为准。</p>
+        <p className="text-[10px] text-gray-400 mt-0.5">河北民族师范学院 · 地址：河北省承德市高新区学院路西2号</p>
+      </div>
+    </div>
+  );
+}
+
+// Mount to both PC and Mobile roots
+const pcRoot = document.getElementById('consultRootPc');
+if (pcRoot) ReactDOM.createRoot(pcRoot).render(<App/>);
+const mobileRoot = document.getElementById('consultRootMobile');
+if (mobileRoot) ReactDOM.createRoot(mobileRoot).render(<App/>);
 </script>
 </body>
 </html>
